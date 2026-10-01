@@ -86,6 +86,20 @@ document.addEventListener('DOMContentLoaded', () => {
   modeOfflineBtn.addEventListener('click', () => setMode('offline'));
   modeReconBtn.addEventListener('click',   () => setMode('recon'));
 
+  // Safe Recon button (separate from form submission)
+  const reconBtn = document.getElementById('recon-btn');
+  if (reconBtn) {
+    reconBtn.addEventListener('click', () => {
+      setMode('recon');
+      const url = urlInput.value.trim();
+      if (!url) return;
+      hideError();
+      hideResults();
+      showLoading('Performing safe reconnaissance...');
+      handleRecon(url).finally(() => hideLoading());
+    });
+  }
+
   // Demo buttons
   document.querySelectorAll('.demo-btn').forEach(btn => {
     btn.addEventListener('click', () => {

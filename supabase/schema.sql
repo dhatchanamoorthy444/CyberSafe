@@ -108,3 +108,30 @@ CREATE INDEX IF NOT EXISTS ix_scan_history_verdict      ON scan_history  (verdic
 CREATE INDEX IF NOT EXISTS ix_scan_history_url_hash     ON scan_history  (url_hash);
 CREATE INDEX IF NOT EXISTS ix_scan_events_created_at    ON scan_events   (created_at DESC);
 CREATE INDEX IF NOT EXISTS ix_trusted_domains_domain    ON trusted_domains (domain);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- recon_history: stores Safe Recon scan results
+-- result_json stores the full structured recon payload
+-- No raw URL stored — only the hostname and a truncated target for display
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS recon_history (
+    id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at   TIMESTAMPTZ NOT NULL    DEFAULT now(),
+    target_url   TEXT        NOT NULL,          -- truncated display URL (not full raw URL for privacy)
+    hostname     TEXT        NOT NULL DEFAULT '',
+    risk_score   INTEGER     NOT NULL DEFAULT 0,
+    risk_level   TEXT        NOT NULL DEFAULT '',  -- SAFE | LOW | MEDIUM | HIGH | CRITICAL
+    summary      TEXT        NOT NULL DEFAULT '',
+    result_json  JSONB,
+    source       TEXT        NOT NULL DEFAULT 'api'
+);
+
+ALTER TABLE recon_history ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "service_role_insert_recon_history"
+    ON recon_history FOR INSERT
+    TO service_role
+    WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS ix_recon_history_created_at ON recon_history (created_at DESC);
+CREATE INDEX IF NOT EXISTS ix_recon_history_hostname    ON recon_history (hostname);
