@@ -1,0 +1,15 @@
+{
+  "name": "cybersafe",
+  "version": "1.0.0",
+  "description": "Explainable URL & QR Risk Screening — Offline Security Engine",
+  "scripts": {
+    "dev": "vercel dev",
+    "localhost": "python -m http.server 3000 --directory frontend",
+    "test": "python -m unittest discover -s tests -p 'test_*.py' -v",
+    "audit": "python final_audit.py"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "private": true
+}

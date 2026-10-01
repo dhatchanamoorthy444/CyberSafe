@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LinkedIn Growth | From 0 to Hero</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Design Tokens */
+    :root {
+      --bg: #ffffff;
+      --bg-surface: #f8fafc;
+      --bg-surface-elevated: #f1f5f9;
+      --border: #e2e8f0;
+      --border-focus: #3b82f6;
+
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+
+      --accent-primary: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-secondary: #64748b;
+
+      --success-bg: #dcfce7;
+      --success-border: #22c55e;
+      --success-text: #16a34a;
+
+      --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+      --radius: 12px;
+      --gap: 24px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0f172a;
+        --bg-surface: #111827;
+        --bg-surface-elevated: #1e293b;
+        --border: #334155;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --text-dim: #64748b;
+        --accent-primary: #60a5fa;
+        --accent-hover: #3b82f6;
+        --success-bg: #166534;
+        --success-border: #4ade80;
+        --success-text: #22c55e;
+      }
+    }
+
+    :root[data-theme="light"] {
+      --bg: #ffffff;
+      --bg-surface: #f8fafc;
+      --bg-surface-elevated: #f1f5f9;
+      --border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --accent-primary: #2563eb;
+      --accent-hover: #1d4ed8;
+    }
+
+    /* Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .text-center { text-align: center; }
+    .text-muted { color: var(--text-muted); }
+    .font-bold { font-weight: 700; }
+    .font-semibold { font-weight: 600; }
+    .font-medium { font-weight: 500; }
+
+    /* Layout */
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding-inline: var(--gap);
+    }
+
+    .section {
+      padding-block: calc(var(--gap) * 2);
+    }
+
+    .section + .section {
+      padding-block-start: calc(var(--gap) * 4);
+    }
+
+    /* Navigation */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: var(--gap);
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--text-main);
+    }
+
+    .nav-cta {
+      display: none;
+    }
+
+    @media (min-width: 768px) {
+      .nav-cta {
+        display: block;
+      }
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: center;
+      border-radius: var(--radius);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent-primary);
+      color: white;
+      padding: 0.875rem 1.5rem;
+      font-size: 0.95rem;
+      border: none;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      padding: 0.875rem 1.5rem;
+      font-size: 0.95rem;
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-surface-elevated);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--accent-primary);
+      padding: 0.875rem 1.5rem;
+      font-size: 0.95rem;
+      border: 1px solid var(--accent-primary);
+    }
+
+    .btn-outline:hover {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding-block: calc(var(--gap) * 4);
+    }
+
+    .hero-title {
+      font-size: clamp(2.25rem, 6vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+    }
+
+    .hero-title span {
+      color: var(--accent-primary);
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 50ch;
+      margin-inline: auto;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .hero-supporting {
+      font-size: 1.125rem;
+      color: var(--text-dim);
+      max-width: 45ch;
+      margin-inline: auto;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @media (min-width: 480px) {
+      .hero-actions {
+        flex-direction: row;
+      }
+    }
+
+    @media (min-width: 500px) {
+      .hero-actions .btn {
+        flex: 1;
+      }
+    }
+
+    /* Icon Group */
+    .icon-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      justify-content: center;
+    }
+
+    .icon-group svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      color: var(--accent-primary);
+    }
+
+    /* Section Titles */
+    .section-title {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+      font-size: 1.125rem;
+      color: var(--text-muted);
+      max-width: 45ch;
+      margin-inline: auto;
+      margin-bottom: 2rem;
+    }
+
+    /* Achievement Cards */
+    .achievement-grid {
+      display: grid;
+      gap: var(--gap);
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .achievement-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .achievement-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .achievement-icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-surface-elevated);
+      border-radius: 50%;
+      color: var(--accent-primary);
+    }
+
+    .achievement-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .achievement-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+    }
+
+    .achievement-desc {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    /* Stats Row */
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--gap);
+      justify-content: center;
+      margin-top: 2.5rem;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1;
+    }
+
+    .stat-value span {
+      font-size: 1.5rem;
+      color: var(--accent-primary);
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.25rem;
+    }
+
+    /* Lead Section */
+    .lead-section {
+      text-align: center;
+    }
+
+    .lead-form {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: var(--border-focus);
+    }
+
+    .form-group input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .form-trust {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.875rem;
+    }
+
+    .form-trust svg {
+      width: 1rem;
+      height: 1rem;
+      margin-right: 0.25rem;
+      vertical-align: middle;
+    }
+
+    /* Testimonial Cards */
+    .testimonials-section {
+      background: var(--bg-surface);
+      border-radius: var(--radius);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .testimonials-section {
+        padding: 3rem;
+      }
+    }
+
+    .testimonial-grid {
+      display: grid;
+      gap: var(--gap);
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+
+    .testimonial-card {
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+
+    .testimonial-quote {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--text-main);
+      margin-bottom: 1rem;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .testimonial-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .testimonial-name {
+      font-weight: 600;
+      color: var(--text-main);
+      font-size: 0.9rem;
+    }
+
+    .testimonial-title {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* FAQ Section */
+    .faq-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .faq-item {
+      background: var(--bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .faq-item:hover {
+      border-color: var(--border-focus);
+    }
+
+    .faq-question {
+      padding: 1.25rem 1.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg);
+    }
+
+    .faq-answer {
+      padding: 0 1.5rem 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .faq-item.active .faq-answer {
+      max-height: 200px;
+      padding-bottom: 1.5rem;
+    }
+
+    .faq-toggle {
+      transition: transform 0.2s;
+    }
+
+    .faq-item.active .faq-toggle {
+      transform: rotate(180deg);
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border);
+      padding-block: 2rem;
+      margin-top: 4rem;
+    }
+
+    .footer-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .footer-brand {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .footer-brand span {
+      color: var(--accent-primary);
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+    }
+
+    .footer-column h4 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .footer-link {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .footer-link:hover {
+      color: var(--text-main);
+    }
+
+    .footer-contact {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    .footer-bottom {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-on-scroll {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.6s ease;
+    }
+
+    .animate-on-scroll.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .container {
+        padding-inline: var(--gap);
+      }
+
+      .hero {
+        padding-block: calc(var(--gap) * 2);
+      }
+
+      .section {
+        padding-block: calc(var(--gap) * 1.5);
+      }
+
+      .section + .section {
+        padding-block-start: calc(var(--gap) * 2);
+      }
+
+      .testimonials-section {
+        padding: 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding-inline: 1.5rem;
+      }
+
+      .achievement-item {
+        padding: 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="#home" class="nav-link font-bold" style="color: var(--text-main); font-size: 1.5rem;">LinkedIn<span style="color: var(--accent-primary);">Growth</span></a>
+      <div class="nav-links">
+        <a href="#achievements" class="nav-link">Services</a>
+        <a href="#process" class="nav-link">How It Works</a>
+        <a href="#reviews" class="nav-link">Testimonials</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+      </div>
+      <a href="#lead-form" class="btn btn-primary nav-cta">Start Growing Today</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero" id="home">
+    <div class="container">
+      <h1 class="hero-title">Turn Your LinkedIn From Invisible to Influential</h1>
+      <p class="hero-subtitle">We build your personal brand from scratch — with strategy, content, and consistency that actually gets you seen.</p>
+      <p class="hero-supporting">From 0 to hero on LinkedIn — without confusion, guesswork, or wasting months figuring it out alone.</p>
+
+      <div class="hero-actions">
+        <a href="#lead-form" class="btn btn-primary">Get Your Profile Audit</a>
+        <a href="#achievements" class="btn btn-secondary">Start Growing Today</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Achievement Section -->
+  <section class="section" id="achievements">
+    <div class="container text-center">
+      <h2 class="section-title">Real Growth. Real Results.</h2>
+
+      <div class="achievement-grid">
+        <!-- Achievement 1 -->
+        <div class="achievement-item animate-on-scroll">
+          <div class="achievement-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          </div>
+          <div class="achievement-title">100+ Professionals Built Authority</div>
+          <p class="achievement-desc">Helped professionals establish thought leadership and expertise on LinkedIn</p>
+        </div>
+
+        <!-- Achievement 2 -->
+        <div class="achievement-item animate-on-scroll">
+          <div class="achievement-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 4v5a4 4 0 0 0 4 4v5a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2V8a4 4 0 0 1 4-4h7z"/>
+              <rect x="9" y="9" width="6" height="6" rx="1"/>
+            </svg>
+          </div>
+          <div class="achievement-title">Generated Inbound Leads</div>
+          <p class="achievement-desc">Consistent leads through strategic content marketing and engagement tactics</p>
+        </div>
+
+        <!-- Achievement 3 -->
+        <div class="achievement-item animate-on-scroll">
+          <div class="achievement-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="achievement-title">From Zero to Visible</div>
+          <p class="achievement-desc">Built personal brands from absolute zero to recognized authority</p>
+        </div>
+
+        <!-- Achievement 4 -->
+        <div class="achievement-item animate-on-scroll">
+          <div class="achievement-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8H1z"/>
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+            </svg>
+          </div>
+          <div class="achievement-title">Content Reaching Thousands</div>
+          <p class="achievement-desc">Organic reach through proven content strategy and distribution tactics</p>
+        </div>
+
+        <!-- Achievement 5 -->
+        <div class="achievement-item animate-on-scroll">
+          <div class="achievement-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <path d="M12 14a3 3 0 1 0 3-3 3 3 0 0 0-3 3"/>
+            </svg>
+          </div>
+          <div class="achievement-title">Profiles That Convert</div>
+          <p class="achievement-desc">Profiles optimized to turn views into real opportunities and connections</p>
+        </div>
+      </div>
+
+      <p class="text-muted" style="margin-top: 2.5rem; font-size: 1.125rem;">This isn't luck. It's a system that works.</p>
+    </div>
+  </section>
+
+  <!-- Lead Form Section -->
+  <section class="section bg-gradient" id="lead-form" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary)CC); padding: calc(var(--gap) * 3) 0;">
+    <div class="container">
+      <div class="testimonials-section" style="background: var(--bg); margin-top: -2rem; border-radius: var(--radius); box-shadow: var(--shadow-lg);">
+        <h2 class="section-title text-center">Let's Build Your LinkedIn Presence Together</h2>
+        <p class="section-subtitle text-center">Tell us a bit about you — and we'll show you exactly how to grow.</p>
+
+        <form class="lead-form">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" placeholder="Your full name" required>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="your@email.com" required>
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" placeholder="+1 (555) 123-4567">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.125rem; padding: 1rem 2rem;">Get My Growth Plan</button>
+
+          <p class="form-trust">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            No spam. No fluff. Just actionable clarity.
+          </p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reviews Section -->
+  <section class="section" id="reviews">
+    <div class="container">
+      <h2 class="section-title text-center">What Our Clients Say</h2>
+
+      <div class="testimonials-section">
+        <div class="testimonial-grid">
+          <!-- Testimonial 1 -->
+          <div class="testimonial-card animate-on-scroll">
+            <p class="testimonial-quote">“I had zero presence before this. Within weeks, I started getting inbound messages and profile views.”</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">M</div>
+              <div>
+                <div class="testimonial-name">Michael Chen</div>
+                <div class="testimonial-title">Marketing Director</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial 2 -->
+          <div class="testimonial-card animate-on-scroll">
+            <p class="testimonial-quote">“The clarity I got here saved me months of trial and error.”</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">S</div>
+              <div>
+                <div class="testimonial-name">Sarah Rodriguez</div>
+                <div class="testimonial-title">Freelance Designer</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial 3 -->
+          <div class="testimonial-card animate-on-scroll">
+            <p class="testimonial-quote">“It's not just content — it's a full strategy. That's what made the difference.”</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">J</div>
+              <div>
+                <div class="testimonial-name">James Park</div>
+                <div class="testimonial-title">Tech Founder</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial 4 -->
+          <div class="testimonial-card animate-on-scroll">
+            <p class="testimonial-quote">“I finally understand how LinkedIn actually works.”</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">A</div>
+              <div>
+                <div class="testimonial-name">Aisha Patel</div>
+                <div class="testimonial-title">Career Coach</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p style="text-align: center; margin-top: 2rem; font-size: 1.125rem; color: var(--text-muted);">Results speak louder than promises.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="section" id="faq">
+    <div class="container">
+      <h2 class="section-title text-center">Frequently Asked Questions</h2>
+
+      <div class="faq-grid" style="max-width: 800px; margin: 0 auto;">
+        <!-- FAQ 1 -->
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>Who is this service for?</span>
+            <svg class="faq-toggle" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="faq-answer">
+            Anyone who wants to grow on LinkedIn, whether starting from zero or scaling their presence.
+          </div>
+        </div>
+
+        <!-- FAQ 2 -->
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>Do you create content for me?</span>
+            <svg class="faq-toggle" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="faq-answer">
+            Yes. We help with strategy, scripting, and management depending on the plan you choose.
+          </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>How long does it take to see results?</span>
+            <svg class="faq-toggle" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="faq-answer">
+            Most clients see traction within a few weeks when they follow the consistency guidelines.
+          </div>
+        </div>
+
+        <!-- FAQ 4 -->
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>Is this only for job seekers?</span>
+            <svg class="faq-toggle" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="faq-answer">
+            No. This works for professionals, founders, freelancers, and anyone building a personal brand.
+          </div>
+        </div>
+
+        <!-- FAQ 5 -->
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>What makes this different?</span>
+            <svg class="faq-toggle" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="faq-answer">
+            We don't just guide. We build and execute with you from day one.
+          </div>
+        </div>
+
+        <!-- FAQ 6 -->
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>Do I need prior experience on LinkedIn?</span>
+            <svg class="faq-toggle" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="faq-answer">
+            Not at all. We specialize in taking people from 0 to visible, no experience required.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer" id="contact">
+    <div class="container footer-content">
+      <div class="footer-brand">
+        Building personal brands that stand out — <span style="color: var(--accent-primary);">not blend in.</span>
+      </div>
+
+      <div class="footer-links">
+        <div class="footer-column">
+          <h4>Links</h4>
+          <a href="#home" class="footer-link">Home</a><br>
+          <a href="#achievements" class="footer-link">Services</a><br>
+          <a href="#lead-form" class="footer-link">Book Audit</a><br>
+          <a href="#contact" class="footer-link">Contact</a>
+        </div>
+      </div>
+
+      <div class="footer-contact">
+        Have questions? Reach out anytime.
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 All Rights Reserved. Built for those who are ready to be seen.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    // FAQ Toggle
+    const faqItems = document.querySelectorAll('.faq-item');
+    faqItems.forEach(item => {
+      item.querySelector('.faq-question').addEventListener('click', () => {
+        item.classList.toggle('active');
+      });
+    });
+
+    // Animation on Scroll
+    const animateOnScroll = document.querySelectorAll('.animate-on-scroll');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    animateOnScroll.forEach(el => observer.observe(el));
+
+    // Form Submission
+    document.querySelector('.lead-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const button = e.target.querySelector('button[type="submit"]');
+      const originalText = button.textContent;
+
+      button.textContent = 'Sending...';
+      button.disabled = true;
+      button.classList.add('btn-secondary');
+
+      setTimeout(() => {
+        button.textContent = '✓ Plan Sent!';
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-outline');
+
+        setTimeout(() => {
+          e.target.reset();
+          button.textContent = originalText;
+          button.disabled = false;
+          button.classList.remove('btn-secondary', 'btn-outline');
+          button.classList.add('btn-primary');
+        }, 2000);
+      }, 1000);
+    });
+
+    // Smooth Scrolling for Nav Links
+    document.querySelectorAll('.nav-link, .footer-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
