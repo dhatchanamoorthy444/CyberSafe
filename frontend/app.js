@@ -84,7 +84,13 @@ async function handleFormSubmit(e) {
   showLoading();
 
   try {
-    const response = await fetch('/api/analyze', {
+    // Use Vite Environment variable if provided, fallback to standard endpoints
+    const baseUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+      ? import.meta.env.VITE_API_URL.replace(/\/$/, '')
+      : '';
+    const apiUrl = baseUrl ? `${baseUrl}/api/analyze` : '/api/analyze';
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
