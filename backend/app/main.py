@@ -29,15 +29,13 @@ app = FastAPI(title="CyberSafe API", version="1.0.0")
 # Middlewares & CORS (Allows Vercel Frontend)
 # ---------------------------------------------------------------------------
 # Add localhost for dev and your vercel format for prod
-vercel_url = os.environ.get("VERCEL_FRONTEND_URL", "https://cybersafe.vercel.app")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://cybersafe01.vercel.app",   # your live Vercel frontend
         "http://localhost:3000",
-        "http://127.0.0.1:3000",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        vercel_url,
     ],
     allow_credentials=True,
     allow_methods=["*"],
