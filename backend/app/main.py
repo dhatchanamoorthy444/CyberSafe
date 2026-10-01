@@ -47,6 +47,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://cybersafe01.vercel.app",
+        "https://cybersafe-e2vw5u7c9-3-dx.vercel.app",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
