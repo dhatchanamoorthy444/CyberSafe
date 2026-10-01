@@ -10,14 +10,18 @@ import os
 import hashlib
 import uuid
 import logging
-from typing import Optional, Dict, Any
+import sys
+from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from supabase import create_client
 
-# We copied analyzer into backend/app/analyzer so we can import it directly
-from app.analyzer import analyze_url
+# Add the copied analyzer to the Python path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from analyzer import analyze_url
 
 app = FastAPI(title="CyberSafe API", version="1.0.0")
 
@@ -65,7 +69,6 @@ def get_supabase():
         return None
 
     try:
-        from supabase import create_client
         _supabase_client = create_client(url, key)
         return _supabase_client
     except Exception as exc:
