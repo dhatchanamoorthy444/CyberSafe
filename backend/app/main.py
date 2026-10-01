@@ -42,6 +42,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # ── CORS ─────────────────────────────────────────────────────────────────────
 # Do NOT use allow_origins=["*"] with allow_credentials=True (security issue).
 # Only the production Vercel frontend and local dev are allowed.
+# Regex allows Vercel preview deployments: https://cybersafe-*.vercel.app
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -50,6 +51,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://localhost:3000",
     ],
+    allow_origin_regex=r"https://cybersafe(-[a-z0-9-]+)?\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
