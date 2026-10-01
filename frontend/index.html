@@ -94,19 +94,34 @@
       </div>
 
       <!-- Demo Payloads -->
+      <!-- Mode selector -->
+      <div class="mode-selector">
+        <button class="mode-btn active" id="mode-offline-btn" title="Analyze URL structure offline — never contacts destination">
+          <i data-lucide="shield-off"></i> Analyze Offline
+        </button>
+        <button class="mode-btn" id="mode-recon-btn" title="Retrieve limited public technical metadata from the live server">
+          <i data-lucide="radar"></i> Safe Recon
+        </button>
+      </div>
+      <div class="mode-description" id="mode-description">
+        <i data-lucide="info"></i>
+        <span id="mode-desc-text">Offline mode — analyzes URL structure without contacting the destination.</span>
+      </div>
+
       <div class="demos-container">
         <span class="demos-label">Try a Demo:</span>
-        <button class="demo-btn" data-url="https://example.com/login" data-type="safe">Safe</button>
-        <button class="demo-btn" data-url="http://192.168.1.100/admin" data-type="review">Local IP</button>
+        <button class="demo-btn" data-url="https://example.com" data-type="safe">Safe</button>
+        <button class="demo-btn" data-url="https://google.com" data-type="safe">Google (Official)</button>
         <button class="demo-btn" data-url="https://google.com@evil.example/login" data-type="suspicious">Deceptive @</button>
-        <button class="demo-btn" data-url="https://paypal.com-update-security.example.com/verify?token=123" data-type="suspicious">Lookalike</button>
+        <button class="demo-btn" data-url="https://paypal-secure-login.example.com/verify" data-type="suspicious">Lookalike</button>
+        <button class="demo-btn" data-url="http://192.168.1.100/admin" data-type="review">Local IP</button>
         <button class="demo-btn" data-url="https://bit.ly/3xyz" data-type="review">Shortener</button>
       </div>
 
       <!-- State Displays -->
       <div id="loading-state" class="state-container hidden">
         <div class="scanline-loader"></div>
-        <p>Running deterministic security heuristics...</p>
+        <p id="loading-text">Running deterministic security heuristics...</p>
       </div>
 
       <div id="error-state" class="state-container error-container hidden">
@@ -120,9 +135,7 @@
         <!-- Verdict Banner -->
         <div class="verdict-banner" id="verdict-banner">
           <div class="verdict-main">
-            <div class="verdict-icon" id="verdict-icon">
-              <!-- Dynamically injected -->
-            </div>
+            <div class="verdict-icon" id="verdict-icon"></div>
             <div class="verdict-details">
               <h2 id="verdict-title">VERDICT</h2>
               <p id="verdict-recommendation">Recommendation goes here.</p>
@@ -140,49 +153,76 @@
           </div>
         </div>
 
-        <!-- Explainable Flow Diagram -->
-        <div class="explainable-flow hidden" id="explainable-flow">
-          <!-- Flow stages generated via JS -->
-        </div>
-
-        <!-- Breakdown & Findings Grid -->
-        <div class="analysis-grid">
-
-          <!-- URL Anatomy -->
-          <div class="glass-card anatomy-card">
+        <!-- Offline Analysis Results -->
+        <div id="offline-results">
+          <div class="analysis-grid">
+            <div class="glass-card anatomy-card">
+              <div class="card-header">
+                <h3><i data-lucide="microscope"></i> URL Anatomy</h3>
+              </div>
+              <div class="anatomy-grid" id="anatomy-grid"></div>
+            </div>
+            <div class="glass-card findings-card">
+              <div class="card-header">
+                <h3><i data-lucide="shield-alert"></i> Detection Rules</h3>
+                <span class="findings-count" id="findings-count">0 triggered</span>
+              </div>
+              <div class="findings-list" id="findings-list"></div>
+            </div>
+          </div>
+          <div class="glass-card security-why-card" style="margin-top:1.5rem">
             <div class="card-header">
-              <h3><i data-lucide="microscope"></i> URL Anatomy</h3>
+              <h3><i data-lucide="shield-check"></i> Why This Works</h3>
             </div>
-            <div class="anatomy-grid" id="anatomy-grid">
-              <!-- Dynamically injected -->
+            <div style="font-size:0.9rem;line-height:1.7;color:var(--text-muted)">
+              <p><strong>CyberSafe does not visit the URL.</strong> It analyzes the <em>structure</em> of the URL itself to detect deception patterns.</p>
+              <p style="margin-top:0.5rem"><strong>SAFE does not guarantee the destination is safe.</strong> It means no significant structural indicators were detected.</p>
             </div>
-          </div>
-
-          <!-- Detection Rules (Findings) -->
-          <div class="glass-card findings-card">
-            <div class="card-header">
-              <h3><i data-lucide="shield-alert"></i> Detection Rules</h3>
-              <span class="findings-count" id="findings-count">0 triggered</span>
-            </div>
-            <div class="findings-list" id="findings-list">
-              <!-- Dynamically injected -->
-            </div>
-          </div>
-
-        </div> <!-- /analysis-grid -->
-
-        <!-- Security Why? Panel (Master Prompt 4/4 Requirement #12) -->
-        <div class="glass-card security-why-card" style="margin-top: 1.5rem;">
-          <div class="card-header">
-            <h3><i data-lucide="shield-check"></i> Why This Works</h3>
-          </div>
-          <div style="font-size: 0.9rem; line-height: 1.7; color: var(--text-muted);">
-            <p><strong>CyberSafe does not visit the URL.</strong> It analyzes the <em>structure</em> of the URL itself — its hostname, path, query parameters, and scheme — to detect deception patterns.</p>
-            <p style="margin-top: 0.5rem;"><strong>SAFE does not guarantee the destination is safe.</strong> It means no significant structural indicators were detected. A real malicious site hosted at a legitimate domain will not be flagged by structural analysis alone.</p>
           </div>
         </div>
 
-      </div> <!-- /results-container -->
+        <!-- Safe Recon Results -->
+        <div id="recon-results" class="hidden">
+          <!-- Recon Summary -->
+          <div class="glass-card recon-summary-card">
+            <div class="card-header">
+              <h3><i data-lucide="radar"></i> Recon Summary</h3>
+              <button class="btn-text" id="terminal-toggle-btn">Terminal View</button>
+            </div>
+            <div class="recon-summary-grid" id="recon-summary-grid"></div>
+          </div>
+
+          <!-- Terminal View -->
+          <div id="terminal-view" class="terminal-view hidden">
+            <div class="terminal-header">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+              <span class="terminal-title">cybersafe recon</span>
+            </div>
+            <pre id="terminal-output" class="terminal-output"></pre>
+          </div>
+
+          <!-- Recon Tabs -->
+          <div class="recon-tabs-container glass-card" style="margin-top:1rem">
+            <div class="recon-tab-nav">
+              <button class="recon-tab-btn active" data-tab="dns">DNS</button>
+              <button class="recon-tab-btn" data-tab="http">HTTP</button>
+              <button class="recon-tab-btn" data-tab="tls">TLS</button>
+              <button class="recon-tab-btn" data-tab="headers">Headers</button>
+              <button class="recon-tab-btn" data-tab="cookies">Cookies</button>
+              <button class="recon-tab-btn" data-tab="tech">Technology</button>
+            </div>
+            <div id="recon-tab-dns"     class="recon-tab-panel active"></div>
+            <div id="recon-tab-http"    class="recon-tab-panel hidden"></div>
+            <div id="recon-tab-tls"     class="recon-tab-panel hidden"></div>
+            <div id="recon-tab-headers" class="recon-tab-panel hidden"></div>
+            <div id="recon-tab-cookies" class="recon-tab-panel hidden"></div>
+            <div id="recon-tab-tech"    class="recon-tab-panel hidden"></div>
+          </div>
+        </div>
+
+      </div><!-- /results-container -->
     </section>
 
     <!-- Sidebar / History -->

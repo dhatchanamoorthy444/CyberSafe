@@ -1,6 +1,9 @@
 """
 CyberSafe - Lookalike Domain Detector
 Identifies potential brand impersonation through character substitutions and suspicious patterns.
+
+Fix: Official domains (google.com, paypal.com etc.) are no longer flagged as impersonators.
+Only flag when the registered domain differs from the known official domain.
 """
 
 from typing import List, Dict, Tuple, Optional, Set
@@ -8,49 +11,75 @@ import re
 from .models import Finding
 from .parser import ParsedURL
 
+try:
+    import tldextract
+    _HAS_TLDEXTRACT = True
+except ImportError:
+    _HAS_TLDEXTRACT = False
+
 
 class LookalikeDetector:
     """
     Detects potential domain impersonation through character substitutions, added suspicious words,
     hyphenated brand impersonation, or brand name embedded in different domains.
+
+    KEY RULE: Never flag a domain that IS the official domain for a brand.
+    Only flag domains that LOOK LIKE the official domain but are NOT.
     """
 
-    # Common legitimate brand names for comparison
-    LEGITIMATE_BRANDS: Set[str] = {
-        'google', 'microsoft', 'paypal', 'amazon', 'apple', 'facebook', 'instagram',
-        'github', 'linkedin', 'netflix', 'twitter', 'youtube', 'reddit', 'outlook',
-        'yahoo', 'cnn', 'bbc', 'forbes', 'nasa', 'wikipedia', 'stackoverflow',
-        'gmail', 'office365', 'outlook', 'linkedin', 'instagram', 'pinterest'
+    # Maps brand keyword → set of official registered domains for that brand.
+    # A URL whose registered domain appears in this set is legitimate — never flag it.
+    OFFICIAL_DOMAINS: Dict[str, Set[str]] = {
+        'google':       {'google.com', 'google.co.uk', 'google.de', 'google.fr', 'google.co.jp',
+                         'google.com.au', 'google.ca', 'google.co.in', 'googleapis.com', 'gstatic.com'},
+        'microsoft':    {'microsoft.com', 'microsoftonline.com', 'live.com', 'outlook.com',
+                         'office.com', 'azure.com', 'bing.com', 'msn.com', 'xbox.com'},
+        'paypal':       {'paypal.com', 'paypal.me', 'paypalobjects.com'},
+        'amazon':       {'amazon.com', 'amazon.co.uk', 'amazon.de', 'amazon.fr', 'amazon.co.jp',
+                         'amazon.com.au', 'amazon.ca', 'amazon.in', 'aws.amazon.com', 'amazonaws.com'},
+        'apple':        {'apple.com', 'icloud.com', 'itunes.com', 'icloud.com'},
+        'facebook':     {'facebook.com', 'fb.com', 'messenger.com', 'fbcdn.net'},
+        'instagram':    {'instagram.com', 'cdninstagram.com'},
+        'github':       {'github.com', 'github.io', 'githubusercontent.com', 'githubcopilot.com'},
+        'linkedin':     {'linkedin.com', 'licdn.com'},
+        'netflix':      {'netflix.com', 'nflximg.com', 'nflxvideo.net'},
+        'twitter':      {'twitter.com', 'x.com', 'twimg.com', 't.co'},
+        'youtube':      {'youtube.com', 'youtu.be', 'yt.be', 'ytimg.com'},
+        'reddit':       {'reddit.com', 'redd.it', 'redditmedia.com', 'reddituploads.com'},
+        'yahoo':        {'yahoo.com', 'yahoo.co.uk', 'yahoo.co.jp', 'yimg.com'},
+        'cnn':          {'cnn.com'},
+        'bbc':          {'bbc.com', 'bbc.co.uk'},
+        'forbes':       {'forbes.com'},
+        'nasa':         {'nasa.gov'},
+        'wikipedia':    {'wikipedia.org', 'wikimedia.org', 'wikidata.org'},
+        'stackoverflow': {'stackoverflow.com', 'stackexchange.com', 'superuser.com', 'serverfault.com'},
+        'gmail':        {'gmail.com', 'google.com'},
+        'outlook':      {'outlook.com', 'live.com', 'hotmail.com', 'microsoft.com'},
+        'pinterest':    {'pinterest.com', 'pinimg.com'},
+        'dropbox':      {'dropbox.com', 'dropboxstatic.com'},
+        'zoom':         {'zoom.us', 'zoom.com'},
+        'slack':        {'slack.com', 'slack-edge.com'},
+        'spotify':      {'spotify.com', 'scdn.co'},
+        'uber':         {'uber.com'},
+        'lyft':         {'lyft.com'},
+        'airbnb':       {'airbnb.com'},
     }
 
-    # Character substitution patterns (from keyboard adjacency)
-    SUBSITUTION_MAP: Dict[str, List[str]] = {
-        'a': ['4', '@'],  # @ can also be userinfo, handled separately
+    # All known brand keywords (derived from OFFICIAL_DOMAINS keys)
+    LEGITIMATE_BRANDS: Set[str] = set(OFFICIAL_DOMAINS.keys())
+
+    # Character substitution patterns (visually similar characters)
+    SUBSTITUTION_MAP: Dict[str, List[str]] = {
+        'a': ['4', '@'],
         'b': ['8'],
-        'c': ['(', '['],  # ( often used in phishing
-        'd': [')'],
         'e': ['3'],
-        'f': ['&'],
         'g': ['6', '9'],
-        'h': ['#'],
         'i': ['1', '!', 'l'],
-        'j': ['!', '7', 'l'],
-        'k': ['!'],
         'l': ['1', '|', 'i'],
-        'm': ['@'],
-        'n': ['^'],
         'o': ['0'],
-        'p': ['?'],
-        'q': ['@'],
-        'r': ['8'],
         's': ['$', '5'],
         't': ['+', '7'],
-        'u': ['\$'],
-        'v': ['\^'],
         'w': ['vv'],
-        'x': ['%', '><'],
-        'y': ['&', 'v'],
-        'z': ['2', 'z', 'zza'],
     }
 
     # Highly suspicious appended word suffixes (common in phishing)
@@ -58,18 +87,40 @@ class LookalikeDetector:
         'login', 'signin', 'verify', 'verification', 'account', 'password',
         'reset', 'secure', 'authentication', 'confirm', 'update', 'billing',
         'payment', 'wallet', 'admin', 'support', 'service', 'online', 'portal',
-        'web', 'webmail', 'email', 'auth', 'id', 'token', 'security'
+        'web', 'webmail', 'email', 'auth', 'id', 'token', 'security',
     ]
 
-    # Hyphenated impersonation patterns: BRAND-brand.com
-    # Where both BRAND and brand versions appear
-    HYPHEN_IMPERSONATION_PATTERN: str = r'^(\w+)-(\w+)\.\w+$'
+    @classmethod
+    def _get_registered_domain(cls, hostname: str) -> str:
+        """
+        Return the registered domain (eTLD+1) for a hostname.
+        Falls back to the last two labels if tldextract is unavailable.
+        """
+        if _HAS_TLDEXTRACT:
+            ext = tldextract.extract(hostname)
+            if ext.domain and ext.suffix:
+                return f"{ext.domain}.{ext.suffix}"
+            return hostname
+        # Fallback: last two labels
+        parts = hostname.lower().split('.')
+        return '.'.join(parts[-2:]) if len(parts) >= 2 else hostname
+
+    @classmethod
+    def _is_official_domain(cls, registered_domain: str) -> bool:
+        """Return True if registered_domain is a known official domain for any brand."""
+        rd = registered_domain.lower()
+        for official_set in cls.OFFICIAL_DOMAINS.values():
+            if rd in official_set:
+                return True
+        return False
 
     @classmethod
     def analyze(cls, parsed: ParsedURL) -> Tuple[List[Finding], Optional[str]]:
         """
         Detect potential lookalike domain impersonation and brand impersonation attempts.
-        Returns (findings, risk_level) where risk_level is 'suspicious' if strong indicators found.
+        Returns (findings, risk_level).
+
+        Never flags an official domain as an impersonator.
         """
         findings: List[Finding] = []
         host = parsed.hostname
@@ -78,181 +129,146 @@ class LookalikeDetector:
             return findings, None
 
         host_lower = host.lower()
-        labels = host_lower.split('.')
-        domain_part = labels[0] if labels else ""
+        registered_domain = cls._get_registered_domain(host_lower)
 
-        # 1. Direct brand impersonation (exact brand name)
-        if domain_part in cls.LEGITIMATE_BRANDS:
+        # ── GATE: if the registered domain IS an official domain, stop here ──
+        # e.g. google.com, www.google.com, mail.google.com → all clean
+        if cls._is_official_domain(registered_domain):
+            return findings, None
+
+        # Extract just the domain label (without TLD) for brand matching
+        if _HAS_TLDEXTRACT:
+            ext = tldextract.extract(host_lower)
+            domain_label = ext.domain or host_lower.split('.')[0]
+        else:
+            parts = host_lower.split('.')
+            domain_label = parts[-2] if len(parts) >= 2 else parts[0]
+
+        # 1. Direct brand name in domain label (e.g. "paypal" in "paypal-secure.com")
+        for brand, official_set in cls.OFFICIAL_DOMAINS.items():
+            if brand not in domain_label:
+                continue
+            # Registered domain is NOT official (checked above), but brand name appears
             findings.append(
                 Finding(
-                    rule_id="DIRECT_BRAND_IMPERSONATION",
+                    rule_id="BRAND_IN_NON_OFFICIAL_DOMAIN",
                     severity="high",
-                    score=50,
-                    title=f"Direct brand impersonation: {domain_part}",
+                    score=55,
+                    title=f"Brand name '{brand}' in non-official domain",
                     message=(
-                        f"The hostname '{host}' uses '{domain_part}', which is a legitimate brand name. "
-                        f"This is frequently seen in phishing campaigns impersonating this service."
+                        f"The hostname '{host}' contains the brand name '{brand}' but is not "
+                        f"the official {brand.capitalize()} domain. "
+                        f"Official domains: {', '.join(sorted(official_set)[:3])}."
+                        f" This pattern is commonly used in phishing."
                     ),
-                    evidence=f"Exact brand match: {domain_part}"
+                    evidence=f"Brand '{brand}' found in domain label '{domain_label}' of non-official host '{registered_domain}'"
                 )
             )
             return findings, "suspicious"
 
-        # 2. Character substitution detection
-        possible_subs = cls._detect_substitutions(domain_part)
+        # 2. Character substitution lookalike (e.g. "g00gle.com", "paypa1.com")
+        possible_subs = cls._detect_substitutions(domain_label)
         for description, brand in possible_subs.items():
             findings.append(
                 Finding(
                     rule_id="LOOKALIKE_HOSTNAME",
                     severity="high",
                     score=50,
-                    title=f"Possible lookalike hostname: {domain_part}",
+                    title=f"Possible lookalike domain: {domain_label}",
                     message=(
-                        f"The hostname '{host}' contains '{domain_part}', which is a character-substitution variation "
-                        f"of '{brand}'. Such substitutions (e.g., '1' for 'l', '0' for 'o') are common in phishing attacks."
+                        f"The hostname '{host}' uses '{domain_label}', which appears to be a "
+                        f"character-substitution variation of '{brand}' "
+                        f"(e.g. '0' for 'o', '1' for 'l'). "
+                        f"This is a common phishing technique."
                     ),
-                    evidence=f"Observed hostname: {domain_part} | Possible impersonated brand: {brand} | Reason: {description}"
+                    evidence=f"Observed: {domain_label} | Impersonated brand: {brand} | Reason: {description}"
                 )
             )
 
-        # 3. Suspicious suffix detection
-        suffix_matches = cls._detect_suspicious_suffixes(domain_part)
-        if suffix_matches:
+        # 3. Suspicious suffix appended to a brand name
+        suffix_matches = cls._detect_suspicious_suffixes(domain_label)
+        if suffix_matches and not findings:  # avoid double-firing with rule 1
             findings.append(
                 Finding(
                     rule_id="SUSPICIOUS_SUFFIX_IMPERSONATION",
                     severity="medium",
                     score=30,
-                    title=f"Suspicious suffix detection: {domain_part}",
+                    title=f"Suspicious suffix in domain: {domain_label}",
                     message=(
-                        f"The hostname '{host}' includes '{domain_part}' which contains suspicious suffix '{suffix_matches[0]}'. "
-                        f"Such appended words are frequently used in phishing domains attempting to impersonate services."
+                        f"The domain label '{domain_label}' ends with a suspicious suffix "
+                        f"'{suffix_matches[0]}', which is commonly appended to brand names "
+                        f"in phishing domains."
                     ),
-                    evidence=f"Suspicious suffix detected: {domain_part} -> {suffix_matches[0]}"
+                    evidence=f"Suspicious suffix: {suffix_matches[0]} in {domain_label}"
                 )
             )
 
-        # 4. Hyphenated brand impersonation (brand-brand.com)
-        hyphen_impersonation = cls._detect_hyphen_impersonation(host_lower)
-        if hyphen_impersonation:
+        # 4. Hyphenated brand impersonation (e.g. "google-login.com")
+        hyphen_brand = cls._detect_hyphen_impersonation(host_lower, registered_domain)
+        if hyphen_brand and not findings:
             findings.append(
                 Finding(
-                    rule_id="HYPHEN_IMPERSONATION",
+                    rule_id="HYPHEN_BRAND_IMPERSONATION",
                     severity="high",
-                    score=45,
+                    score=50,
                     title=f"Hyphenated brand impersonation: {host}",
                     message=(
-                        f"The hostname '{host}' appears to be a hyphenated version of '{hyphen_impersonation}', "
-                        f"a pattern frequently used to impersonate legitimate services (e.g., 'google-login.com')."
+                        f"The hostname '{host}' uses a hyphenated pattern that combines "
+                        f"the brand name '{hyphen_brand}' with other words. "
+                        f"This is a classic phishing domain structure "
+                        f"(e.g. 'paypal-secure.com', 'google-login.net')."
                     ),
-                    evidence=f"Hyphenated impersonation pattern detected: {host}"
+                    evidence=f"Hyphenated impersonation: {host} → brand '{hyphen_brand}'"
                 )
             )
             return findings, "suspicious"
 
-        # 5. Brand name embedded in different domain (e.g., 'paypa' in 'paypa-store.com')
-        embedded_brand = cls._detect_embedded_brands(domain_part)
-        if embedded_brand:
-            findings.append(
-                Finding(
-                    rule_id="EMBEDDED_BRAND_IMPERSONATION",
-                    severity="medium",
-                    score=35,
-                    title=f"Brand name embedded in different domain: {domain_part}",
-                    message=(
-                        f"The hostname '{host}' contains brand-related term '{domain_part}' that appears to be "
-                        f"embedded within a different domain structure, potentially attempting to impersonate '{embedded_brand}'."
-                    ),
-                    evidence=f"Brand '{domain_part}' embedded in different domain: {host}"
-                )
-            )
-
-        # Determine if hostname should be marked as SUSPICIOUS based on findings
-        is_suspicious = False
-        for finding in findings:
-            if finding.severity == "high" and finding.score >= 35:
-                is_suspicious = True
-                break
-
+        # Determine overall risk level
+        is_suspicious = any(
+            f.severity == "high" and f.score >= 40 for f in findings
+        )
         return findings, "suspicious" if is_suspicious else None
 
-    @staticmethod
-    def _detect_substitutions(domain_part: str) -> Dict[str, str]:
-        """Detect character substitutions that could impersonate legitimate brands."""
+    # ── Private helpers ──────────────────────────────────────────────────────
+
+    @classmethod
+    def _detect_substitutions(cls, domain_label: str) -> Dict[str, str]:
+        """
+        Detect if domain_label looks like a brand after reversing common
+        character substitutions (0→o, 1→l, 3→e, …).
+        """
         result: Dict[str, str] = {}
-        brand_candidates: List[Tuple[str, str]] = []
-
-        # Check if any brand name directly appears within domain_part (embedded brand)
-        for brand in LookalikeDetector.LEGITIMATE_BRANDS:
-            if brand in domain_part:
-                result[f"Embedded brand '{brand}'"] = brand
-                continue
-
-        # Check for potential substitution patterns by reversing character mapping
-        for i, char in enumerate(domain_part):
-            if char in LookalikeDetector.SUBSITUTION_MAP:
-                for substitution in LookalikeDetector.SUBSITUTION_MAP[char]:
-                    potential_brand = domain_part[:i] + substitution + domain_part[i + 1:]
-                    if potential_brand in LookalikeDetector.LEGITIMATE_BRANDS:
-                        # Create a descriptive reason string
-                        reason = f"Character substitution: '{char}' -> '{substitution}' transforms into '{potential_brand}'"
-                        brand_candidates.append((reason, potential_brand))
-
-        # Convert to requested format: description -> brand
-        for reason, brand in brand_candidates:
-            result[reason] = brand
-
+        for i, char in enumerate(domain_label):
+            for orig, subs in cls.SUBSTITUTION_MAP.items():
+                if char in subs:
+                    candidate = domain_label[:i] + orig + domain_label[i + 1:]
+                    if candidate in cls.LEGITIMATE_BRANDS:
+                        reason = f"'{char}' substitutes for '{orig}' → '{candidate}'"
+                        result[reason] = candidate
         return result
 
     @staticmethod
-    def _detect_suspicious_suffixes(domain_part: str) -> List[str]:
-        """Detect suspicious word suffixes appended to domain part."""
+    def _detect_suspicious_suffixes(domain_label: str) -> List[str]:
+        """Detect suspicious word suffixes in the domain label."""
         matches: List[str] = []
         for suffix in LookalikeDetector.SUSPICIOUS_SUFFIXES:
-            # Check if domain_part ends with or contains the suffix
-            # Also handle cases where there's a separator like '-' or '_'
-            if domain_part.endswith(f"-{suffix}") or domain_part.endswith(f"_{suffix}") or domain_part.endswith(suffix):
+            if (domain_label.endswith(f"-{suffix}")
+                    or domain_label.endswith(f"_{suffix}")
+                    or domain_label.endswith(suffix)):
                 matches.append(suffix)
         return matches
 
-    @staticmethod
-    def _detect_hyphen_impersonation(host: str) -> Optional[str]:
+    @classmethod
+    def _detect_hyphen_impersonation(cls, host: str, registered_domain: str) -> Optional[str]:
         """
-        Detect hyphenated brand impersonation pattern like 'brand-brand.com'
-        Returns the brand that might be impersonated, or None.
+        Detect patterns like 'paypal-secure.com', 'google-login.net' where a known brand
+        appears as a hyphenated component of a non-official registered domain.
         """
-        match = re.match(LookalikeDetector.HYPHEN_IMPERSONATION_PATTERN, host)
-        if match:
-            prefix = match.group(1).lower()
-            suffix = match.group(2).lower()
-
-            # Check if either part matches a known brand
-            if prefix in LookalikeDetector.LEGITIMATE_BRANDS:
-                return prefix
-            elif suffix in LookalikeDetector.LEGITIMATE_BRANDS:
-                return suffix
-
-        # Check other hyphen patterns like 'brand-login.com' where login is suspicious suffix
-        parts = host.split('-')
-        if len(parts) >= 2:
-            for part in parts:
-                # Check if part ends with a suspicious suffix
-                for suffix in LookalikeDetector.SUSPICIOUS_SUFFIXES:
-                    if part.endswith(suffix):
-                        # Check if any other part is a known brand
-                        for other_part in parts:
-                            if other_part.lower() in LookalikeDetector.LEGITIMATE_BRANDS:
-                                return other_part
-
-        return None
-
-    @staticmethod
-    def _detect_embedded_brands(domain_part: str) -> Optional[str]:
-        """Detect brand names embedded in domain parts (e.g., 'paypa' in 'paypa-store.com')."""
-        for brand in LookalikeDetector.LEGITIMATE_BRANDS:
-            if brand in domain_part:
-                # Check if domain_part is longer or different from brand
-                if domain_part != brand and len(domain_part) > len(brand):
-                    return brand
-
+        parts = registered_domain.split('-')
+        if len(parts) < 2:
+            return None
+        for part in parts:
+            part_clean = part.split('.')[0]  # strip TLD fragment
+            if part_clean in cls.LEGITIMATE_BRANDS:
+                return part_clean
         return None
