@@ -62,6 +62,13 @@ logger = logging.getLogger("cybersafe")
 logger.setLevel(logging.INFO)
 
 
+# ── Startup: log registered routes ────────────────────────────────────────────
+@app.on_event("startup")
+async def log_routes():
+    routes = [f"{r.methods} {r.path}" for r in app.routes if hasattr(r, "methods")]
+    logger.info("Registered routes: %s", ", ".join(routes))
+
+
 # ── Request / Response models ─────────────────────────────────────────────────
 class AnalyzeRequest(BaseModel):
     url: str = Field(..., min_length=1, max_length=4096)
