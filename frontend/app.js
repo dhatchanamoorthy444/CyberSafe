@@ -851,7 +851,6 @@ function initPhishingGallery() {
 function analyzeGalleryItem(url) {
   urlInput.value = url;
   switchToTab('scan');
-  setMode('offline');
   hideError();
   hideResults();
   showLoading('Analyzing URL structure...');
