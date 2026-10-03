@@ -1,6 +1,6 @@
 /**
  * CyberSafe — Frontend Application Logic v2.0
- * Modes: Offline Analysis + Safe Recon
+ * Modes: Offline Analysis
  * CYBERSAFE 2.0: Attack Lab, Phishing Gallery, Threat Feed, URL Compare, IOC, Badge
  */
 
@@ -133,45 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
   qrCloseBtn.addEventListener('click', closeQRScanner);
   clearHistoryBtn.addEventListener('click', clearHistory);
 
-  // Mode buttons
-  modeOfflineBtn.addEventListener('click', () => setMode('offline'));
-  modeReconBtn.addEventListener('click',   () => setMode('recon'));
-
-  // Safe Recon button
-  const reconBtn = document.getElementById('recon-btn');
-  if (reconBtn) {
-    reconBtn.addEventListener('click', () => {
-      setMode('recon');
-      const url = urlInput.value.trim();
-      if (!url) return;
-      hideError();
-      hideResults();
-      showLoading('Performing safe reconnaissance...');
-      handleRecon(url).finally(() => hideLoading());
-    });
-  }
-
-  // Recon tab navigation
-  document.querySelectorAll('.recon-tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tab = btn.getAttribute('data-tab');
-      document.querySelectorAll('.recon-tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.recon-tab-panel').forEach(p => p.classList.add('hidden'));
-      btn.classList.add('active');
-      const panel = document.getElementById(`recon-tab-${tab}`);
-      if (panel) panel.classList.remove('hidden');
-    });
-  });
-
-  // Terminal toggle
-  if (terminalToggleBtn) {
-    terminalToggleBtn.addEventListener('click', () => {
-      terminalView.classList.toggle('hidden');
-      terminalToggleBtn.textContent = terminalView.classList.contains('hidden')
-        ? 'Terminal View' : 'Hide Terminal';
-    });
-  }
-
   // Export report button
   const exportBtn = document.getElementById('export-report-btn');
   if (exportBtn) {
@@ -239,25 +200,6 @@ function switchToTab(tabId) {
 }
 
 // ============================================================================
-// Mode Management
-// ============================================================================
-function setMode(mode) {
-  currentMode = mode;
-  modeOfflineBtn.classList.toggle('active', mode === 'offline');
-  modeReconBtn.classList.toggle('active',   mode === 'recon');
-
-  if (mode === 'offline') {
-    modeDescText.textContent = 'Offline mode — analyzes URL structure without contacting the destination.';
-    const span = analyzeBtn.querySelector('span');
-    if (span) span.textContent = 'Analyze Offline';
-  } else {
-    modeDescText.textContent = 'Safe Recon — retrieves limited public technical metadata. Uses a real network request.';
-    const span = analyzeBtn.querySelector('span');
-    if (span) span.textContent = 'Run Recon';
-  }
-}
-
-// ============================================================================
 // Form Submission
 // ============================================================================
 async function handleFormSubmit(e) {
@@ -267,16 +209,10 @@ async function handleFormSubmit(e) {
 
   hideError();
   hideResults();
-  showLoading(currentMode === 'recon'
-    ? 'Performing safe reconnaissance...'
-    : 'Analyzing URL structure...');
+  showLoading('Analyzing URL structure...');
 
   try {
-    if (currentMode === 'recon') {
-      await handleRecon(url);
-    } else {
-      await handleAnalyze(url);
-    }
+    await handleAnalyze(url);
   } catch (err) {
     showError('Request Failed', getReadableError(err));
   } finally {
@@ -322,38 +258,8 @@ async function handleAnalyze(url) {
     mode: 'offline',
   });
   renderAnalysisResults(data.analysis);
-  showResults('offline');
+  showResults();
   renderIOC(data.analysis);
-}
-
-// ============================================================================
-// Safe Recon
-// ============================================================================
-async function handleRecon(url) {
-  const response = await fetch(API.recon, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url }),
-  });
-
-  const data = await response.json();
-  if (!response.ok || !data.success) {
-    throw new Error(data.error?.message || data.error?.code || 'Recon failed.');
-  }
-
-  const recon = data.recon;
-  const risk  = recon.risk || {};
-
-  addToHistory({
-    url,
-    verdict: risk.level || 'UNKNOWN',
-    score: risk.score || 0,
-    findingCount: (risk.indicators || []).length,
-    timestamp: Date.now(),
-    mode: 'recon',
-  });
-  renderReconResults(recon);
-  showResults('recon');
 }
 
 // ============================================================================
@@ -563,7 +469,7 @@ function toggleFindingExpand(btn, id) {
 window.toggleFindingExpand = toggleFindingExpand;
 
 // ============================================================================
-// Render — Safe Recon (preserved from original)
+// Render — Security Analysis Results
 // ============================================================================
 function renderReconResults(recon) {
   const risk = recon.risk || {}; const http = recon.http || {}; const tls = recon.tls || {};
@@ -572,10 +478,10 @@ function renderReconResults(recon) {
   const level = risk.level || 'UNKNOWN';
   const levelClass = { LOW: 'SAFE', MEDIUM: 'REVIEW', HIGH: 'SUSPICIOUS', CRITICAL: 'SUSPICIOUS' }[level] || 'REVIEW';
   verdictBanner.className = `verdict-banner ${levelClass}`;
-  verdictTitle.textContent = `RECON: ${level} RISK`;
+  verdictTitle.textContent = `${level} RISK`;
   verdictRecommendation.textContent = risk.indicators?.length ? risk.indicators.join(' · ') : 'No critical indicators detected from public metadata.';
   scoreText.textContent = `${risk.score || 0}/100`;
-  confidenceText.textContent = 'RECON';
+  confidenceText.textContent = 'SECURITY';
   verdictIcon.innerHTML = `<i data-lucide="radar"></i>`;
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
@@ -699,7 +605,7 @@ function handleQRResult(text) {
   if (type === 'text') { showQRWarning('📄 NON-URL PAYLOAD', 'Plain text detected', 'This QR code contains plain text, not a URL.', 'info'); return; }
   if (type === 'app-link') { showQRWarning('⚠ NON-WEB PAYLOAD', `Detected scheme: ${text.split(':')[0]}:`, 'This QR code uses a non-web scheme.', 'warn'); return; }
   setTimeout(() => {
-    setMode('offline'); hideError(); hideResults(); showLoading('Analyzing URL structure...');
+    hideError(); hideResults(); showLoading('Analyzing URL structure...');
     handleAnalyze(text).catch(err => showError('Analysis Failed', err.message)).finally(() => hideLoading());
   }, 300);
 }
@@ -742,7 +648,7 @@ function renderHistory(filter) {
   const fragment = document.createDocumentFragment();
   items.forEach((item, i) => {
     const el = document.createElement('div'); el.className = 'history-item'; el.setAttribute('title', item.url || '');
-    el.innerHTML = `<div class="history-item-top"><span class="history-verdict ${escapeHTML(item.verdict)}">${escapeHTML(item.verdict)}</span><span class="history-meta font-mono">${item.score != null ? `<span class="history-score">${item.score}</span>` : ''}${item.findingCount != null ? `<span class="history-findings">${item.findingCount} ${item.findingCount === 1 ? 'finding' : 'findings'}</span>` : ''}${item.mode === 'recon' ? '<span class="history-mode-badge">RECON</span>' : ''}</span></div><div class="history-item-bottom"><span class="history-url">${escapeHTML(item.url || '')}</span><span class="history-time">${escapeHTML(formatTimestamp(item.timestamp))}</span></div>`;
+    el.innerHTML = `<div class="history-item-top"><span class="history-verdict ${escapeHTML(item.verdict)}">${escapeHTML(item.verdict)}</span><span class="history-meta font-mono">${item.score != null ? `<span class="history-score">${item.score}</span>` : ''}${item.findingCount != null ? `<span class="history-findings">${item.findingCount} ${item.findingCount === 1 ? 'finding' : 'findings'}</span>` : ''}</span></div><div class="history-item-bottom"><span class="history-url">${escapeHTML(item.url || '')}</span><span class="history-time">${escapeHTML(formatTimestamp(item.timestamp))}</span></div>`;
     el.addEventListener('click', () => { urlInput.value = scanHistory[i]?.url || ''; urlInput.focus(); switchToTab('scan'); });
     fragment.appendChild(el);
   });
@@ -759,7 +665,8 @@ function hideLoading() { loadingState.classList.add('hidden'); analyzeBtn.disabl
 function showError(title, msg) { errorTitle.textContent = title; errorMessage.textContent = msg; errorState.classList.remove('hidden'); }
 function hideError() { errorState.classList.add('hidden'); }
 function hideResults() { resultsContainer.classList.add('hidden'); }
-function showResults(mode) { resultsContainer.classList.remove('hidden'); offlineResults.classList.toggle('hidden', mode !== 'offline'); reconResults.classList.toggle('hidden', mode !== 'recon'); }
+
+function showResults() { resultsContainer.classList.remove('hidden'); offlineResults.classList.remove('hidden'); }
 
 // ============================================================================
 // ATTACK LAB
@@ -797,7 +704,7 @@ function initAttackLab() {
   const viewFull = document.getElementById('lab-view-full');
   if (viewFull) viewFull.addEventListener('click', () => {
     const url = document.getElementById('lab-example-url').textContent;
-    if (url) { urlInput.value = url; switchToTab('scan'); setMode('offline'); hideError(); hideResults(); showLoading('Analyzing URL structure...'); handleAnalyze(url).catch(err => showError('Analysis Failed', err.message)).finally(() => hideLoading()); }
+    if (url) { urlInput.value = url; switchToTab('scan'); hideError(); hideResults(); showLoading('Analyzing URL structure...'); handleAnalyze(url).catch(err => showError('Analysis Failed', err.message)).finally(() => hideLoading()); }
   });
 }
 
