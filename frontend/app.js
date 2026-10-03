@@ -168,6 +168,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Badge
   initBadge();
 
+  // Result Actions
+  initResultActions();
+
   // Full History Tab
   initFullHistory();
 });
@@ -279,6 +282,8 @@ function renderAnalysisResults(analysis) {
   renderAnatomy(analysis);
   renderFindings(analysis.findings || [], analysis.score);
   renderRiskScoreBar(analysis.score, analysis.findings || []);
+  renderNetworkTransparency();
+  renderTechnicalDetails(analysis);
 
   // Store last analysis for export and IOC
   window._lastAnalysis = analysis;
@@ -286,6 +291,10 @@ function renderAnalysisResults(analysis) {
   // Show export button
   const exportBtn = document.getElementById('export-report-btn');
   if (exportBtn) exportBtn.classList.remove('hidden');
+
+  // Show result actions bar
+  const actionsBar = document.getElementById('result-actions-bar-wrapper');
+  if (actionsBar) actionsBar.classList.remove('hidden');
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -469,61 +478,151 @@ function toggleFindingExpand(btn, id) {
 window.toggleFindingExpand = toggleFindingExpand;
 
 // ============================================================================
-// Render — Security Analysis Results
+// Network Transparency — Phase 17
 // ============================================================================
-function renderReconResults(recon) {
-  const risk = recon.risk || {}; const http = recon.http || {}; const tls = recon.tls || {};
-  const target = recon.target || {}; const headers = recon.headers || {};
+function renderNetworkTransparency() {
+  const container = document.getElementById('network-transparency');
+  if (!container) return;
 
-  const level = risk.level || 'UNKNOWN';
-  const levelClass = { LOW: 'SAFE', MEDIUM: 'REVIEW', HIGH: 'SUSPICIOUS', CRITICAL: 'SUSPICIOUS' }[level] || 'REVIEW';
-  verdictBanner.className = `verdict-banner ${levelClass}`;
-  verdictTitle.textContent = `${level} RISK`;
-  verdictRecommendation.textContent = risk.indicators?.length ? risk.indicators.join(' · ') : 'No critical indicators detected from public metadata.';
-  scoreText.textContent = `${risk.score || 0}/100`;
-  confidenceText.textContent = 'SECURITY';
-  verdictIcon.innerHTML = `<i data-lucide="radar"></i>`;
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-
-  reconSummaryGrid.innerHTML = [
-    { label: 'HTTPS', value: tls.enabled ? '✓ Enabled' : '✗ Not enabled', ok: tls.enabled },
-    { label: 'TLS', value: tls.expired === false ? '✓ Valid' : tls.expired ? '✗ Expired' : tls.enabled ? '? Unknown' : '— N/A', ok: !tls.expired && tls.enabled },
-    { label: 'HTTP', value: http.status_code ? `${http.status_code}` : '— N/A', ok: http.status_code >= 200 && http.status_code < 400 },
-    { label: 'Redirects', value: http.redirect_count > 1 ? `⚠ ${http.redirect_count}` : `✓ ${http.redirect_count || 0}`, ok: (http.redirect_count || 0) <= 1 },
-    { label: 'Sec Headers', value: (() => { const missing = Object.values(headers).filter(h => !h.present).length; return missing ? `⚠ ${missing} missing` : '✓ All present'; })(), ok: Object.values(headers).every(h => h.present) },
-    { label: 'DNS', value: recon.dns?.A?.length ? '✓ Resolved' : '? No A record', ok: (recon.dns?.A?.length || 0) > 0 },
-  ].map(s => `
-    <div class="recon-summary-item ${s.ok ? 'ok' : 'warn'}">
-      <span class="recon-summary-label">${escapeHTML(s.label)}</span>
-      <span class="recon-summary-value">${escapeHTML(s.value)}</span>
-    </div>`).join('');
-
-  if (terminalOutput) terminalOutput.textContent = buildTerminalOutput(recon);
-  renderReconTabDNS(recon.dns || {}); renderReconTabHTTP(http); renderReconTabTLS(tls);
-  renderReconTabHeaders(headers); renderReconTabCookies(recon.cookies || []); renderReconTabTech(recon.technology || {});
+  container.innerHTML = `
+    <div class="transparency-section">
+      <div class="transparency-title">Analysis performed</div>
+      <div class="transparency-grid">
+        <div class="transparency-row performed">
+          <span class="transparency-check">✓</span>
+          <span class="transparency-label">URL parsing</span>
+          <span class="transparency-status">Performed</span>
+        </div>
+        <div class="transparency-row performed">
+          <span class="transparency-check">✓</span>
+          <span class="transparency-label">Hostname analysis</span>
+          <span class="transparency-status">Performed</span>
+        </div>
+        <div class="transparency-row performed">
+          <span class="transparency-check">✓</span>
+          <span class="transparency-label">Pattern analysis</span>
+          <span class="transparency-status">Performed</span>
+        </div>
+        <div class="transparency-row performed">
+          <span class="transparency-check">✓</span>
+          <span class="transparency-label">Risk engine</span>
+          <span class="transparency-status">Performed</span>
+        </div>
+      </div>
+    </div>
+    <div class="transparency-section">
+      <div class="transparency-title">Not performed (no destination contact)</div>
+      <div class="transparency-grid">
+        <div class="transparency-row not-performed">
+          <span class="transparency-check">✗</span>
+          <span class="transparency-label">DNS lookup</span>
+          <span class="transparency-status">Not performed</span>
+        </div>
+        <div class="transparency-row not-performed">
+          <span class="transparency-check">✗</span>
+          <span class="transparency-label">HTTP request</span>
+          <span class="transparency-status">Not performed</span>
+        </div>
+        <div class="transparency-row not-performed">
+          <span class="transparency-check">✗</span>
+          <span class="transparency-label">Redirects</span>
+          <span class="transparency-status">Not followed</span>
+        </div>
+        <div class="transparency-row not-performed">
+          <span class="transparency-check">✗</span>
+          <span class="transparency-label">Destination request</span>
+          <span class="transparency-status">Not performed</span>
+        </div>
+        <div class="transparency-row not-performed">
+          <span class="transparency-check">✗</span>
+          <span class="transparency-label">Cookies</span>
+          <span class="transparency-status">Not accessed</span>
+        </div>
+        <div class="transparency-row not-performed">
+          <span class="transparency-check">✗</span>
+          <span class="transparency-label">Remote JavaScript</span>
+          <span class="transparency-status">Not executed</span>
+        </div>
+      </div>
+    </div>`;
 }
 
-function renderReconTabDNS(dns) { const panel = document.getElementById('recon-tab-dns'); if (!panel) return; const types = ['A','AAAA','CNAME','MX','NS','TXT']; panel.innerHTML = types.map(t => { const records = dns[t] || []; return `<div class="recon-record-group"><div class="recon-record-type">${t}</div>${records.length === 0 ? `<div class="recon-record-empty">No records</div>` : records.map(r => `<div class="recon-record-value font-mono">${escapeHTML(r.value || r.error || '')}${r.ttl ? `<span class="recon-ttl"> TTL ${r.ttl}s</span>` : ''}</div>`).join('')}</div>`; }).join(''); }
-function renderReconTabHTTP(http) { const panel = document.getElementById('recon-tab-http'); if (!panel) return; const rows = [['Status', http.status_code || '—'],['Final URL', http.final_url || '—'],['Redirects', http.redirect_count ?? '—'],['Content-Type', http.content_type || '—'],['Server', http.server || '—'],['Error', http.error || 'None']]; let html = `<table class="recon-table">${rows.map(([k,v]) => `<tr><td class="recon-table-key">${escapeHTML(k)}</td><td class="recon-table-val font-mono">${escapeHTML(String(v))}</td></tr>`).join('')}</table>`; if (http.redirects?.length > 1) { html += `<div class="recon-redirect-chain"><div class="recon-section-title">Redirect Chain</div>`; http.redirects.forEach((r, i) => { html += `<div class="recon-redirect-hop"><span class="recon-hop-num">${i+1}</span><span class="recon-hop-url font-mono">${escapeHTML(r.url)}</span><span class="recon-hop-status">${r.status}</span></div>`; }); html += `</div>`; } panel.innerHTML = html; }
-function renderReconTabTLS(tls) { const panel = document.getElementById('recon-tab-tls'); if (!panel) return; if (!tls.enabled) { panel.innerHTML = `<div class="recon-warning">⚠ TLS not enabled or could not be retrieved.<br>${escapeHTML(tls.error || tls.reason || '')}</div>`; return; } const rows = [['Enabled','Yes'],['Version',tls.version||'—'],['Subject',tls.subject||'—'],['Issuer',tls.issuer||'—'],['Valid From',tls.valid_from||'—'],['Valid Until',tls.valid_until||'—'],['Expired',tls.expired===true?'⚠ Yes':tls.expired===false?'✓ No':'?'],['Days Remaining',tls.days_remaining!=null?`${tls.days_remaining} days`:'—'],['Hostname Matches',tls.hostname_matches===true?'✓ Yes':tls.hostname_matches===false?'✗ No':'?']]; panel.innerHTML = `<table class="recon-table">${rows.map(([k,v]) => `<tr><td class="recon-table-key">${escapeHTML(k)}</td><td class="recon-table-val font-mono">${escapeHTML(String(v))}</td></tr>`).join('')}</table>`; }
-function renderReconTabHeaders(headers) { const panel = document.getElementById('recon-tab-headers'); if (!panel) return; panel.innerHTML = Object.entries(headers).map(([name, info]) => `<div class="recon-header-row ${info.present ? 'present' : 'missing'}"><div class="recon-header-name"><span class="recon-header-status">${info.present ? '✓' : '✗'}</span>${escapeHTML(name)}</div>${info.present && info.value ? `<div class="recon-header-value font-mono">${escapeHTML(info.value)}</div>` : ''}<div class="recon-header-desc">${escapeHTML(info.description || '')}</div></div>`).join(''); }
-function renderReconTabCookies(cookies) { const panel = document.getElementById('recon-tab-cookies'); if (!panel) return; if (!cookies.length) { panel.innerHTML = `<div class="recon-empty">No cookies found.</div>`; return; } panel.innerHTML = cookies.map(c => `<div class="recon-cookie-card"><div class="recon-cookie-name font-mono">${escapeHTML(c.name)}</div><div class="recon-cookie-flags"><span class="cookie-flag ${c.secure?'ok':'warn'}">Secure: ${c.secure?'✓':'✗'}</span><span class="cookie-flag ${c.http_only?'ok':'warn'}">HttpOnly: ${c.http_only?'✓':'✗'}</span><span class="cookie-flag ${c.same_site?'ok':'warn'}">SameSite: ${c.same_site?escapeHTML(c.same_site):'✗'}</span></div>${c.warnings.length?`<div class="recon-cookie-warnings">${c.warnings.map(w => `<div class="recon-warning-item">⚠ ${escapeHTML(w)}</div>`).join('')}</div>`:''}</div>`).join(''); }
-function renderReconTabTech(tech) { const panel = document.getElementById('recon-tab-tech'); if (!panel) return; const entries = Object.entries(tech); if (!entries.length) { panel.innerHTML = `<div class="recon-empty">No technology signals detected.</div>`; return; } panel.innerHTML = `<table class="recon-table">${entries.map(([k,v]) => `<tr><td class="recon-table-key">${escapeHTML(k)}</td><td class="recon-table-val font-mono">${escapeHTML(String(v))}</td></tr>`).join('')}</table>`; }
+// ============================================================================
+// Technical Details collapsible — Phase 18
+// ============================================================================
+function renderTechnicalDetails(analysis) {
+  const panel = document.getElementById('technical-details-panel');
+  if (!panel) return;
 
-function buildTerminalOutput(recon) {
-  const t = recon.target || {}; const dns = recon.dns || {}; const http = recon.http || {};
-  const tls = recon.tls || {}; const risk = recon.risk || {}; const hdr = recon.headers || {};
-  return [
-    `$ cybersafe recon ${t.hostname || '?'}`, ``,
-    `[+] Target:      ${t.hostname || '?'}`, `[+] Scheme:      ${(t.scheme || '').toUpperCase()}`, ``,
-    `[DNS]`, `[+] A:    ${(dns.A || []).map(r => r.value).join(', ') || 'no records'}`, ``,
-    `[HTTP]`, `[+] Status:     ${http.status_code || '—'}`, `[+] Final URL:  ${http.final_url || '—'}`, ``,
-    `[TLS]`, `[${tls.enabled ? '+' : '!'}] TLS:     ${tls.enabled ? 'ENABLED' : 'DISABLED'}`, ``,
-    `[SECURITY HEADERS]`, ...Object.entries(hdr).map(([name, info]) => `[${info.present ? '+' : '!'}] ${name}: ${info.present ? 'PRESENT' : 'MISSING'}`), ``,
-    `[RISK]`, `[${risk.score > 40 ? '!' : '+'}] Score: ${risk.score || 0}/100 (${risk.level || '?'})`,
-    ...(risk.indicators || []).map(i => `[!] ${i}`), ``,
-    `[+] Completed: ${recon.timestamp || new Date().toISOString()}`,
-  ].join('\n');
+  const p = analysis.parsed || {};
+  const rows = [
+    ['Input URL',         p.original_url || '—'],
+    ['Scheme',            p.scheme || '—'],
+    ['Hostname',          analysis.actual_hostname || p.hostname || '—'],
+    ['Port',              p.port ? String(p.port) : 'Default'],
+    ['Path',              p.path || '/'],
+    ['Query',             p.query || 'None'],
+    ['Fragment',          p.fragment || 'None'],
+    ['Has Userinfo (@)',  p.has_userinfo ? 'Yes' : 'No'],
+    ['Punycode',         p.is_punycode ? `Yes — ${p.unicode_hostname || 'IDN encoded'}` : 'No'],
+    ['URL Length',        `${(p.original_url || '').length} characters`],
+    ['Findings',          `${(analysis.findings || []).length} rule(s) triggered`],
+    ['Rules triggered',   (analysis.findings || []).map(f => f.rule_id).join(', ') || 'None'],
+  ];
+
+  panel.innerHTML = `<table class="tech-details-table">
+    ${rows.map(([k, v]) => `
+      <tr>
+        <td class="tech-details-key">${escapeHTML(k)}</td>
+        <td class="tech-details-val font-mono">${escapeHTML(String(v))}</td>
+      </tr>`).join('')}
+  </table>`;
+}
+
+function toggleTechnicalDetails() {
+  const btn = document.getElementById('technical-details-btn');
+  const panel = document.getElementById('technical-details-panel');
+  if (!btn || !panel) return;
+  const expanded = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', String(!expanded));
+  panel.classList.toggle('hidden', expanded);
+  btn.querySelector('.toggle-label').textContent = expanded ? 'Show Technical Details' : 'Hide Technical Details';
+  const icon = btn.querySelector('svg, i[data-lucide]');
+  if (icon) {
+    icon.setAttribute('data-lucide', expanded ? 'chevron-down' : 'chevron-up');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+}
+window.toggleTechnicalDetails = toggleTechnicalDetails;
+
+// ============================================================================
+// Result Actions — Phase 19
+// ============================================================================
+function initResultActions() {
+  const analyzeAnotherBtn = document.getElementById('analyze-another-btn');
+  if (analyzeAnotherBtn) {
+    analyzeAnotherBtn.addEventListener('click', () => {
+      hideResults();
+      hideError();
+      urlInput.value = '';
+      urlInput.focus();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  const copyResultBtn = document.getElementById('copy-result-btn');
+  if (copyResultBtn) {
+    copyResultBtn.addEventListener('click', () => {
+      exportReport();
+    });
+  }
+}
+
+// ============================================================================
+// Render — Security Analysis Results (legacy recon adapter — no live data)
+// ============================================================================
+function renderReconResults() {
+  // No-op: live recon is not implemented. This stub prevents runtime errors.
 }
 
 // ============================================================================

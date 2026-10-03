@@ -218,6 +218,34 @@
               <div id="ioc-grid" class="ioc-grid"></div>
             </div>
 
+            <!-- Result Actions — Phase 19 -->
+            <div class="result-actions-bar">
+              <button id="analyze-another-btn" class="btn btn-secondary">
+                <i data-lucide="refresh-cw"></i> Analyze Another
+              </button>
+              <button id="copy-result-btn" class="btn btn-secondary">
+                <i data-lucide="clipboard-copy"></i> Copy Result
+              </button>
+            </div>
+
+            <!-- Network Transparency — Phase 17 -->
+            <div class="glass-card network-transparency-card" style="margin-top:1.5rem">
+              <div class="card-header">
+                <h3><i data-lucide="activity"></i> Analysis Method</h3>
+                <span class="safe-mode-label">Offline Only</span>
+              </div>
+              <div id="network-transparency"></div>
+            </div>
+
+            <!-- Technical Details collapsible — Phase 18 -->
+            <div class="glass-card technical-details-card" style="margin-top:1rem">
+              <button id="technical-details-btn" class="technical-details-toggle" aria-expanded="false" onclick="toggleTechnicalDetails()">
+                <i data-lucide="chevron-down"></i>
+                <span class="toggle-label">Show Technical Details</span>
+              </button>
+              <div id="technical-details-panel" class="hidden"></div>
+            </div>
+
             <!-- Safe Analysis Mode explanation -->
             <div class="glass-card safe-analysis-card" style="margin-top:1.5rem">
               <div class="card-header">

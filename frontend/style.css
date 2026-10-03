@@ -3378,3 +3378,180 @@ body {
     text-align: left;
   }
 }
+
+/* ============================================================================
+   PHASE 17 — Network Transparency
+   ============================================================================ */
+.network-transparency-card {
+  margin-top: 1.5rem;
+}
+
+.transparency-section {
+  margin-bottom: 1.5rem;
+}
+
+.transparency-section:last-child {
+  margin-bottom: 0;
+}
+
+.transparency-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.transparency-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.transparency-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.transparency-row.performed {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--safe-text);
+}
+
+.transparency-row.not-performed {
+  background: rgba(107, 114, 128, 0.1);
+  border: 1px solid rgba(107, 114, 128, 0.3);
+  color: var(--text-muted);
+}
+
+.transparency-check {
+  font-weight: 700;
+  min-width: 1rem;
+}
+
+.transparency-label {
+  flex: 1;
+  font-weight: 500;
+}
+
+.transparency-status {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* ============================================================================
+   PHASE 18 — Technical Details Collapsible
+   ============================================================================ */
+.technical-details-card {
+  margin-top: 1rem;
+}
+
+.technical-details-toggle {
+  width: 100%;
+  padding: 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.technical-details-toggle:hover {
+  color: var(--accent-primary);
+}
+
+.technical-details-toggle i {
+  width: 1.2rem;
+  height: 1.2rem;
+  transition: transform 0.2s ease;
+}
+
+.technical-details-toggle .toggle-label {
+  flex: 1;
+  text-align: left;
+}
+
+#technical-details-panel {
+  padding: 0 1rem 1rem 1rem;
+}
+
+.tech-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.tech-details-table tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.tech-details-table tr:last-child {
+  border-bottom: none;
+}
+
+.tech-details-key {
+  padding: 0.75rem;
+  padding-right: 1.5rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  width: 30%;
+  text-align: left;
+  vertical-align: top;
+}
+
+.tech-details-val {
+  padding: 0.75rem;
+  color: var(--text-main);
+  word-break: break-word;
+}
+
+/* ============================================================================
+   PHASE 19 — Result Actions Bar
+   ============================================================================ */
+.result-actions-bar {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.result-actions-bar .btn {
+  flex: 1;
+  min-width: 150px;
+}
+
+@media (max-width: 768px) {
+  .result-actions-bar {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .result-actions-bar .btn {
+    width: 100%;
+  }
+
+  .transparency-row {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .tech-details-key {
+    width: 40%;
+    font-size: 0.85rem;
+  }
+
+  .tech-details-table {
+    font-size: 0.85rem;
+  }
+}
