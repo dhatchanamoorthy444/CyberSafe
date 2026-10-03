@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "CyberSafe Link Analyzer",
+  "version": "2.0.0",
+  "description": "Offline structural URL analysis — never visits the destination.",
+  "permissions": ["activeTab", "contextMenus"],
+  "host_permissions": ["https://cybersafe01.vercel.app/*"],
+  "action": {"default_popup":"popup.html","default_icon":{"16":"icon16.png","48":"icon48.png","128":"icon128.png"}},
+  "icons": {"16":"icon16.png","48":"icon48.png","128":"icon128.png"},
+  "background": {"service_worker":"background.js"},
+  "commands": {"_execute_action":{"suggested_key":{"default":"Ctrl+Shift+Y"},"description":"Analyze current tab"}},
+  "content_security_policy": "script-src 'self'; object-src 'self';"
+}

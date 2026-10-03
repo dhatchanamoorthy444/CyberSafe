@@ -1,0 +1,245 @@
+/* CyberSafe Browser Extension — Popup Stylesheet */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 400px;
+  background: #090d16;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.popup-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: linear-gradient(135deg, #090d16 0%, #0f1419 100%);
+}
+
+.popup-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #334155;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.popup-header h1 {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.version {
+  font-size: 11px;
+  color: #94a3b8;
+  background: rgba(2, 132, 199, 0.15);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.popup-main {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input-section {
+  display: grid;
+  gap: 8px;
+}
+
+.url-input {
+  width: 100%;
+  padding: 10px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #f8fafc;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.url-input:focus {
+  outline: none;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+}
+
+.button-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.btn {
+  padding: 10px 12px;
+  background: #0284c7;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  background: #0369a1;
+}
+
+.btn-secondary {
+  background: #334155;
+  color: #f8fafc;
+}
+
+.btn-secondary:hover {
+  background: #475569;
+}
+
+.state {
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.state.hidden {
+  display: none;
+}
+
+.state.error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid #ef4444;
+  color: #f87171;
+}
+
+#loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 100px;
+}
+
+.loader {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(2, 132, 199, 0.3);
+  border-top-color: #0284c7;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+#error-text {
+  color: #f87171;
+}
+
+#verdict {
+  padding: 12px;
+  border-radius: 6px;
+  border: 2px solid;
+  margin-bottom: 8px;
+}
+
+#verdict.SAFE {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+  color: #34d399;
+}
+
+#verdict.REVIEW {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+
+#verdict.SUSPICIOUS {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+  color: #f87171;
+}
+
+.findings {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #1e293b;
+  padding: 8px;
+}
+
+.finding-item {
+  padding: 6px;
+  margin-bottom: 6px;
+  background: #111827;
+  border-left: 2px solid #0284c7;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.finding-item:last-child {
+  margin-bottom: 0;
+}
+
+.finding-title {
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.finding-msg {
+  color: #94a3b8;
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+.popup-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #334155;
+  text-align: center;
+}
+
+.popup-footer a {
+  color: #0284c7;
+  text-decoration: none;
+  font-size: 12px;
+  transition: color 0.2s ease;
+}
+
+.popup-footer a:hover {
+  color: #0369a1;
+  text-decoration: underline;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

