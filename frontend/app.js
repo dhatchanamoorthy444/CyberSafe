@@ -1,7 +1,7 @@
 /**
  * CyberSafe — Frontend Application Logic v2.0
  * Modes: Offline Analysis
- * CYBERSAFE 2.0: Attack Lab, Phishing Gallery, Threat Feed, URL Compare, IOC, Badge
+ * CYBERSAFE 2.0: Attack Lab, Phishing Gallery, Threat Feed, URL Compare, IOC
  */
 
 // ============================================================================
@@ -13,7 +13,6 @@ const BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && impor
 
 const API = {
   analyze: BASE_URL ? `${BASE_URL}/api/analyze` : '/api/analyze',
-  badge:   BASE_URL ? `${BASE_URL}/api/badge`   : '/api/badge',
 };
 
 // ============================================================================
@@ -164,9 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // IOC Extraction
   initIOC();
-
-  // Badge
-  initBadge();
 
   // Result Actions
   initResultActions();
@@ -1103,57 +1099,6 @@ function copyIOC() {
   }).catch(() => {});
 }
 
-// ============================================================================
-// BADGE
-// ============================================================================
-function initBadge() {
-  const btn = document.getElementById('generate-badge-btn');
-  if (btn) btn.addEventListener('click', generateBadge);
-  const copyBtn = document.getElementById('copy-badge-btn');
-  if (copyBtn) copyBtn.addEventListener('click', copyBadge);
-}
-
-async function generateBadge() {
-  const url = document.getElementById('badge-url-input')?.value.trim();
-  if (!url) return;
-
-  const btn = document.getElementById('generate-badge-btn');
-  btn.disabled = true;
-  btn.textContent = 'Verifying...';
-
-  try {
-    const response = await fetch(API.badge, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
-    });
-    const data = await response.json();
-    if (data.success) {
-      document.getElementById('badge-verdict-text').textContent = data.verdict;
-      document.getElementById('badge-verdict-text').className = `badge-verdict badge-verdict--${data.verdict.toLowerCase()}`;
-      document.getElementById('badge-score-text').textContent = String(data.score);
-      document.getElementById('badge-confidence-text').textContent = (data.confidence || '').toUpperCase();
-      document.getElementById('badge-result').classList.remove('hidden');
-    }
-  } catch (err) {
-    showError('Badge Error', getReadableError(err));
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<i data-lucide="shield-check"></i> Generate Badge';
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-  }
-}
-
-function copyBadge() {
-  const verdict = document.getElementById('badge-verdict-text')?.textContent || '';
-  const score = document.getElementById('badge-score-text')?.textContent || '';
-  const confidence = document.getElementById('badge-confidence-text')?.textContent || '';
-  const badge = `CYBERSAFE VERIFIED | ${verdict} | Risk: ${score} | Confidence: ${confidence}`;
-  navigator.clipboard.writeText(badge).then(() => {
-    const btn = document.getElementById('copy-badge-btn');
-    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => { btn.innerHTML = '<i data-lucide="copy"></i> Copy Badge Code'; if (typeof lucide !== 'undefined') lucide.createIcons(); }, 2000); }
-  }).catch(() => {});
-}
 
 // ============================================================================
 // FULL HISTORY TAB
