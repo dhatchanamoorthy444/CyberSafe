@@ -28,6 +28,7 @@ from supabase import create_client
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from analyzer import analyze_url
 from app.recon import run_recon
+from app.adapters.vendors import check_providers
 
 # ── Rate limiter ─────────────────────────────────────────────────────────────
 RATE_LIMIT = os.environ.get("RATE_LIMIT", "30/minute")
@@ -191,7 +192,9 @@ def analyze_endpoint(
             analysis.get("verdict"), analysis.get("score"),
         )
 
-        return {"success": True, "analysis": analysis}
+        # Vendor analysis (genuine, separate from risk engine)
+        vendors = check_providers(url, "url")
+        return {"success": True, "analysis": analysis, "vendors": vendors}
 
     except Exception:
         logger.exception("Analysis error req=%s", request_id)

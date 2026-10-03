@@ -228,6 +228,36 @@
               </button>
             </div>
 
+            <!-- Security vendors' analysis -->
+            <div class="glass-card vendor-analysis-card" id="vendor-analysis-card" style="margin-top:1rem">
+              <div class="card-header">
+                <h3><i data-lucide="shield-check"></i> Security vendors' analysis</h3>
+                <span class="safe-mode-label" id="vendor-config-label">No providers configured</span>
+              </div>
+              <div id="vendor-summary" class="vendor-summary"></div>
+              <div class="vendor-controls">
+                <input type="text" id="vendor-search" class="search-input" placeholder="Search vendors..." autocomplete="off">
+                <div class="filter-buttons vendor-filters" id="vendor-filters">
+                  <button class="filter-btn active" data-vendor-filter="ALL">All</button>
+                  <button class="filter-btn" data-vendor-filter="malicious">Malicious</button>
+                  <button class="filter-btn" data-vendor-filter="suspicious">Suspicious</button>
+                  <button class="filter-btn" data-vendor-filter="clean">Clean</button>
+                  <button class="filter-btn" data-vendor-filter="unrated">Unrated</button>
+                  <button class="filter-btn" data-vendor-filter="not_checked">Not checked</button>
+                  <button class="filter-btn" data-vendor-filter="error">Error</button>
+                </div>
+              </div>
+              <div class="vendor-legend" aria-label="Status legend">
+                <span class="legend-item"><span class="badge clean"></span> Clean</span>
+                <span class="legend-item"><span class="badge malicious"></span> Malicious</span>
+                <span class="legend-item"><span class="badge suspicious"></span> Suspicious</span>
+                <span class="legend-item"><span class="badge unrated"></span> Unrated</span>
+                <span class="legend-item"><span class="badge not-checked"></span> Not checked</span>
+                <span class="legend-item"><span class="badge error"></span> Error</span>
+              </div>
+              <div id="vendor-list" class="vendor-table-wrap"></div>
+            </div>
+
             <!-- Network Transparency — Phase 17 -->
             <div class="glass-card network-transparency-card" style="margin-top:1.5rem">
               <div class="card-header">

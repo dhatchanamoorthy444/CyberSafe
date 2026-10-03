@@ -259,6 +259,7 @@ async function handleAnalyze(url) {
   renderAnalysisResults(data.analysis);
   showResults();
   renderIOC(data.analysis);
+  if (data.vendors) renderVendorAnalysis(data.vendors);
 }
 
 // ============================================================================
@@ -283,6 +284,9 @@ function renderAnalysisResults(analysis) {
 
   // Store last analysis for export and IOC
   window._lastAnalysis = analysis;
+
+  // Show vendor analysis (separate from risk engine)
+  if (data && data.vendors) renderVendorAnalysis(data.vendors);
 
   // Show export button
   const exportBtn = document.getElementById('export-report-btn');
@@ -622,6 +626,72 @@ function initResultActions() {
 function renderReconResults() {
   // No-op: live recon is not implemented. This stub prevents runtime errors.
 }
+
+function renderVendorAnalysis(vendors) {
+  const card = document.getElementById('vendor-analysis-card');
+  if (!card) return;
+  const listEl = document.getElementById('vendor-list');
+  const summaryEl = document.getElementById('vendor-summary');
+  const label = document.getElementById('vendor-config-label');
+
+  card.classList.remove('hidden');
+
+  const results = vendors.results || [];
+  const checked = results.filter(r => r.checked).length;
+  const malicious = results.filter(r => r.status === 'malicious').length;
+  const suspicious = results.filter(r => r.status === 'suspicious').length;
+  const clean = results.filter(r => r.status === 'clean').length;
+  const unrated = results.filter(r => r.status === 'unrated').length;
+  const errors = results.filter(r => r.status === 'error').length;
+  const total = results.length;
+
+  if (summaryEl) {
+    summaryEl.innerHTML = `<strong>Security vendors' analysis</strong><br>
+      ${checked > 0 ? `<span style="color:var(--safe-text)">${checked} / ${total}</span> vendors flagged this URL` : `<span style="color:var(--text-dim)">No threat-intelligence providers configured.</span>`}<br>
+      <span style="font-size:0.82rem;opacity:0.8">${checked} checked • ${malicious} malicious • ${suspicious} suspicious • ${clean} clean • ${unrated} unrated • ${errors} errors • ${new Date(vendors.scan_timestamp || Date.now()).toLocaleString()}</span>`;
+  }
+  if (label) label.textContent = checked === 0 ? 'No providers configured' : `${checked}/${total} checked`;
+
+  if (!listEl) return;
+  const rows = results.map(r => {
+    const statusClass = r.status || 'not_checked';
+    return `<tr data-vendor="${escapeHTML(r.vendor)}" data-status="${escapeHTML(statusClass)}">
+      <td>${escapeHTML(r.vendor)}</td>
+      <td><span class="status-badge-vendor ${escapeHTML(statusClass)}">${escapeHTML((r.status || 'not checked').replace(/_/g,' '))}</span></td>
+      <td>${escapeHTML(r.details || '')}</td>
+    </tr>`;
+  }).join('');
+  listEl.innerHTML = `<table class="vendor-table" role="table" aria-label="Security vendors analysis">
+    <thead><tr><th>Vendor</th><th>Result</th><th>Details</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+
+  if (checked === 0) {
+    listEl.insertAdjacentHTML('beforeend', `<div style="padding:1.5rem;color:var(--text-dim);text-align:center;font-size:0.9rem;">Vendor results are unavailable because no threat-intelligence providers are configured. The local CyberSafe analysis is shown separately.</div>`);
+  }
+
+  const searchInput = document.getElementById('vendor-search');
+  const filterBtns = document.querySelectorAll('.vendor-filters .filter-btn');
+  function applyFilters() {
+    const text = (searchInput ? searchInput.value : '').toLowerCase();
+    let status = 'ALL';
+    filterBtns.forEach(b => { if (b.classList.contains('active')) status = (b.getAttribute('data-vendor-filter') || 'ALL'); });
+    const trs = listEl.querySelectorAll('tbody tr');
+    trs.forEach(row => {
+      const v = (row.getAttribute('data-vendor') || '').toLowerCase();
+      const s = row.getAttribute('data-status') || '';
+      row.style.display = ((!text || v.includes(text)) && (status === 'ALL' || s === status)) ? '' : 'none';
+    });
+  }
+  if (searchInput) searchInput.addEventListener('input', applyFilters);
+  filterBtns.forEach(btn => btn.addEventListener('click', () => {
+    filterBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilters();
+  }));
+  applyFilters();
+}
+window.renderVendorAnalysis = renderVendorAnalysis;
 
 // ============================================================================
 // Security Report Export
