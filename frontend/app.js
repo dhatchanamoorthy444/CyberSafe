@@ -269,7 +269,7 @@ function renderAnalysisResults(analysis) {
   verdictBanner.className = `verdict-banner ${v}`;
   verdictTitle.textContent = v;
   verdictRecommendation.textContent = analysis.recommendation || '';
-  scoreText.textContent   = `${analysis.score}/100`;
+  scoreText.textContent   = `${100 - Math.max(0, Math.min(100, analysis.score || 0))}%`;
   confidenceText.textContent = (analysis.confidence || '').toUpperCase();
 
   const iconMap = { SAFE: 'shield-check', REVIEW: 'alert-circle', SUSPICIOUS: 'shield-alert' };
@@ -371,17 +371,19 @@ function renderRiskScoreBar(score, findings) {
   const container = document.getElementById('risk-score-breakdown');
   if (!container) return;
 
-  const pct = Math.min(100, score);
+  const securityRating = Math.max(0, Math.min(100, 100 - (typeof score === 'number' ? score : 0)));
+  const pct = securityRating;
   const colorClass = score >= 50 ? 'bar--suspicious' : score >= 20 ? 'bar--review' : 'bar--safe';
 
   container.innerHTML = `
     <div class="risk-score-header">
-      <span class="risk-score-label">Risk Score</span>
-      <span class="risk-score-value font-mono">${score}/100</span>
+      <span class="risk-score-label">Security Rating</span>
+      <span class="risk-score-value font-mono">${pct}%</span>
     </div>
     <div class="risk-bar-track">
       <div class="risk-bar-fill ${colorClass}" style="width:${pct}%"></div>
     </div>
+    <p style="font-size:0.8rem;color:var(--text-dim);margin-top:0.25rem;">Security Rating represents the percentage of the rating scale remaining after detected risk indicators. It is not a guarantee that a URL is safe.</p>
     ${findings.length ? `
     <div class="risk-contributions">
       <div class="risk-contrib-title">Score breakdown:</div>
@@ -636,7 +638,7 @@ function exportReport() {
     `  Generated : ${new Date().toISOString()}`,
     `  URL       : ${p.original_url || ''}`,
     `  Verdict   : ${a.verdict}`,
-    `  Risk Score: ${a.score}/100`,
+    `  Security Rating: ${securityRating}%`,
     `  Confidence: ${(a.confidence || '').toUpperCase()}`,
     '───────────────────────────────────────────',
     '  RECOMMENDATION',
