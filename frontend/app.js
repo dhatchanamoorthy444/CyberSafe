@@ -638,7 +638,7 @@ function exportReport() {
     `  Generated : ${new Date().toISOString()}`,
     `  URL       : ${p.original_url || ''}`,
     `  Verdict   : ${a.verdict}`,
-    `  Security Rating: ${securityRating}%`,
+    `  Security Rating: ${Math.max(0, Math.min(100, 100 - (a.score || 0)))}%`,
     `  Confidence: ${(a.confidence || '').toUpperCase()}`,
     '───────────────────────────────────────────',
     '  RECOMMENDATION',
