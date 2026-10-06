@@ -29,6 +29,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from analyzer import analyze_url
 from app.recon import run_recon
 from app.adapters.vendors import check_providers
+import asyncio
+from app.adapters.threat_intel import check_virustotal
+from app.adapters.security_ai import explain_findings
 
 # ── Rate limiter ─────────────────────────────────────────────────────────────
 RATE_LIMIT = os.environ.get("RATE_LIMIT", "30/minute")
@@ -171,7 +174,7 @@ def root():
 @app.post("/api/analyze")
 @app.post("/scan")
 @limiter.limit(RATE_LIMIT)
-def analyze_endpoint(
+async def analyze_endpoint(
     request: Request,
     body: AnalyzeRequest,
     background_tasks: BackgroundTasks,
@@ -180,9 +183,35 @@ def analyze_endpoint(
     url = body.url.strip()
 
     try:
+        # Phase 1: Local offline analysis (fast)
         analysis = analyze_url(url)
-
         background_tasks.add_task(persist_scan, analysis, request_id)
+
+        # Phase 2: AI & VT (parallel external calls)
+        findings = analysis.get("findings", [])
+        tasks = [
+            check_virustotal(url),
+            explain_findings(findings, url)
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        threat_intel = results[0] if not isinstance(results[0], Exception) else {"vendor": "VirusTotal", "status": "error", "checked": True, "details": "VirusTotal integration failed."}
+        ai_explanation = results[1] if not isinstance(results[1], Exception) else {"explanation": "AI explanation unavailable.", "risk_summary": "Analysis failed."}
+
+        # Also get any other configured providers
+        configured_vendors = check_providers(url, "url")
+        # Extend configured_vendors results with our VT result
+        if "results" in configured_vendors:
+            configured_vendors["results"].append(threat_intel)
+            configured_vendors["providers_checked"] += 1
+            if threat_intel["status"] == "malicious":
+                configured_vendors["summary"]["malicious"] += 1
+            elif threat_intel["status"] == "suspicious":
+                configured_vendors["summary"]["suspicious"] += 1
+            elif threat_intel["status"] == "clean":
+                configured_vendors["summary"]["clean"] += 1
+            elif threat_intel["status"] == "error":
+                configured_vendors["summary"]["errors"] += 1
 
         url_hash = hashlib.sha256(url.encode()).hexdigest()[:16]
         hostname = (analysis.get("parsed") or {}).get("hostname") or "unknown"
@@ -192,9 +221,14 @@ def analyze_endpoint(
             analysis.get("verdict"), analysis.get("score"),
         )
 
-        # Vendor analysis (genuine, separate from risk engine)
-        vendors = check_providers(url, "url")
-        return {"success": True, "analysis": analysis, "vendors": vendors}
+        # Normalized response schema
+        return {
+            "success": True,
+            "analysis": analysis,
+            "vendors": configured_vendors,
+            "ai": ai_explanation,
+            "metadata": {"request_id": request_id}
+        }
 
     except Exception:
         logger.exception("Analysis error req=%s", request_id)

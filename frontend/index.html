@@ -137,6 +137,15 @@
         <div id="loading-state" class="state-container hidden">
           <div class="scanline-loader"></div>
           <p id="loading-text">Analyzing URL structure...</p>
+          <div id="loading-stages" class="loading-stages">
+            <div class="stage-item" id="stage-1"><i data-lucide="check-circle-2"></i> 1. Parsing URL Anatomy</div>
+            <div class="stage-item" id="stage-2"><i data-lucide="circle"></i> 2. Checking Deception & Lookalikes</div>
+            <div class="stage-item" id="stage-3"><i data-lucide="circle"></i> 3. Evaluating IP & Hostname</div>
+            <div class="stage-item" id="stage-4"><i data-lucide="circle"></i> 4. Analyzing Path & Patterns</div>
+            <div class="stage-item" id="stage-5"><i data-lucide="circle"></i> 5. Querying VirusTotal Intelligence</div>
+            <div class="stage-item" id="stage-6"><i data-lucide="circle"></i> 6. Generating Groq AI Security Explanation</div>
+            <div class="stage-item" id="stage-7"><i data-lucide="circle"></i> 7. Building Comprehensive Report</div>
+          </div>
         </div>
 
         <div id="error-state" class="state-container error-container hidden">
@@ -205,6 +214,15 @@
                 </div>
                 <div class="findings-list" id="findings-list"></div>
               </div>
+            </div>
+
+            <!-- IOC Extraction Panel -->
+            <div id="ai-explanation-panel" class="glass-card hidden">
+              <div class="card-header">
+                <h3><i data-lucide="bot"></i> AI Security Explanation</h3>
+                <span class="safe-mode-label" style="background:#5B21B6;color:#E9D5FF">Powered by Groq Llama 3</span>
+              </div>
+              <div id="ai-explanation-content" style="padding:1rem"></div>
             </div>
 
             <!-- IOC Extraction Panel -->

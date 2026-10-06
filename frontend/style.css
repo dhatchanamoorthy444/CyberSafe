@@ -807,6 +807,38 @@ body {
   to { transform: translateX(200%); }
 }
 
+.loading-stages {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+.stage-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
+
+.stage-item i {
+  width: 18px;
+  height: 18px;
+}
+
+.rotating {
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  100% { transform: rotate(360deg); }
+}
+
 /* Phase 16: Professional error state */
 .error-container {
   background: var(--suspicious-bg);

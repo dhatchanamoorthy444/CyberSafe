@@ -208,13 +208,11 @@ async function handleFormSubmit(e) {
 
   hideError();
   hideResults();
-  showLoading('Analyzing URL structure...');
 
   try {
     await handleAnalyze(url);
   } catch (err) {
     showError('Request Failed', getReadableError(err));
-  } finally {
     hideLoading();
   }
 }
@@ -233,33 +231,89 @@ function getReadableError(err) {
   return msg || 'An unexpected error occurred. Please try again.';
 }
 
+// Stage updater helper
+function updateStage(number) {
+  for (let i = 1; i <= 7; i++) {
+    const el = document.getElementById(`stage-${i}`);
+    if (!el) continue;
+    if (i < number) {
+      el.innerHTML = `<i data-lucide="check-circle-2" style="color:var(--safe-text)"></i> ${el.innerText.trim()}`;
+      el.style.opacity = '1';
+    } else if (i === number) {
+      el.innerHTML = `<i data-lucide="loader" class="rotating" style="color:var(--primary-light)"></i> ${el.innerText.trim()}`;
+      el.style.opacity = '1';
+    } else {
+      el.innerHTML = `<i data-lucide="circle"></i> ${el.innerText.trim()}`;
+      el.style.opacity = '0.5';
+    }
+  }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
 // ============================================================================
 // Offline Analysis
 // ============================================================================
 async function handleAnalyze(url) {
-  const response = await fetch(API.analyze, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url }),
-  });
+  showLoading('Initializing Security Pipeline...');
 
-  const data = await response.json();
+  // Fake animation of stages for UI feedback since backend does it in one call
+  let currentStage = 1;
+  const stageInterval = setInterval(() => {
+    if (currentStage <= 6) {
+      updateStage(currentStage);
+      currentStage++;
+    }
+  }, 400);
+
+  let response, data;
+  try {
+    response = await fetch(API.analyze, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+
+    data = await response.json();
+  } finally {
+    clearInterval(stageInterval);
+  }
+
+  updateStage(7);
+
   if (!response.ok || !data.success) {
     throw new Error(data.error?.message || 'Analysis failed. Please try again.');
   }
 
-  addToHistory({
-    url,
-    verdict: data.analysis.verdict,
-    score: data.analysis.score,
-    findingCount: (data.analysis.findings || []).length,
-    timestamp: Date.now(),
-    mode: 'offline',
-  });
-  renderAnalysisResults(data.analysis);
-  showResults();
-  renderIOC(data.analysis);
-  if (data.vendors) renderVendorAnalysis(data.vendors);
+  setTimeout(() => {
+    hideLoading();
+
+    addToHistory({
+      url,
+      verdict: data.analysis.verdict,
+      score: data.analysis.score,
+      findingCount: (data.analysis.findings || []).length,
+      timestamp: Date.now(),
+      mode: 'offline',
+    });
+
+    renderAnalysisResults(data.analysis);
+    if (data.ai) renderAIExplanation(data.ai);
+    showResults();
+    renderIOC(data.analysis);
+    if (data.vendors) renderVendorAnalysis(data.vendors);
+  }, 500);
+}
+
+function renderAIExplanation(ai) {
+  const panel = document.getElementById('ai-explanation-panel');
+  if (!panel || !ai.explanation) return;
+  panel.classList.remove('hidden');
+
+  const content = document.getElementById('ai-explanation-content');
+  content.innerHTML = `
+    <p><strong>Explanation:</strong> ${escapeHTML(ai.explanation)}</p>
+    <p style="margin-top:0.5rem"><strong>Risk Summary:</strong> ${escapeHTML(ai.risk_summary)}</p>
+  `;
 }
 
 // ============================================================================
@@ -284,9 +338,6 @@ function renderAnalysisResults(analysis) {
 
   // Store last analysis for export and IOC
   window._lastAnalysis = analysis;
-
-  // Show vendor analysis (separate from risk engine)
-  if (data && data.vendors) renderVendorAnalysis(data.vendors);
 
   // Show export button
   const exportBtn = document.getElementById('export-report-btn');
