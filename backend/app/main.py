@@ -31,7 +31,7 @@ from app.recon import run_recon
 from app.adapters.vendors import check_providers
 import asyncio
 from app.adapters.threat_intel import check_virustotal
-from app.adapters.security_ai import explain_findings, explain_url_findings
+from app.adapters.security_ai import explain_findings
 
 # ── Rate limiter ─────────────────────────────────────────────────────────────
 RATE_LIMIT = os.environ.get("RATE_LIMIT", "30/minute")
