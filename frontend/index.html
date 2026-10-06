@@ -66,10 +66,6 @@
         <i data-lucide="search"></i>
         <span>SCAN</span>
       </button>
-      <button class="nav-tab" data-tab="attack-lab">
-        <i data-lucide="zap"></i>
-        <span>ATTACK LAB</span>
-      </button>
       <button class="nav-tab" data-tab="phishing-gallery">
         <i data-lucide="eye"></i>
         <span>PHISHING GALLERY</span>
@@ -354,86 +350,6 @@
           </div>
         </div>
       </aside>
-    </section>
-
-    <!-- ATTACK LAB Tab -->
-    <section class="tab-panel" id="attack-lab-tab">
-      <div class="glass-card">
-        <div class="card-header">
-          <h2><i data-lucide="zap"></i> Attack Lab</h2>
-          <span class="attack-lab-badge">Interactive Security Testing</span>
-        </div>
-        <p class="attack-lab-description">
-          Choose a technique to analyze a representative URL. CyberSafe analyzes the URL structure without visiting the destination.
-        </p>
-
-        <!-- Safe Analysis Status -->
-        <div class="safe-analysis-status">
-          <div class="status-badge">SAFE ANALYSIS MODE</div>
-          <div class="status-items">
-            <span class="status-item">✓ No destination requests</span>
-            <span class="status-item">✓ No DNS resolution</span>
-            <span class="status-item">✓ No redirects</span>
-            <span class="status-item">✓ No automatic navigation</span>
-          </div>
-        </div>
-
-        <!-- Search and Filter -->
-        <div class="attack-lab-controls">
-          <input type="text" id="attack-lab-search" class="search-input" placeholder="Search techniques...">
-          <div class="filter-buttons">
-            <button class="filter-btn active" data-filter="ALL">ALL</button>
-            <button class="filter-btn" data-filter="DECEPTION">DECEPTION</button>
-            <button class="filter-btn" data-filter="PAYLOAD">PAYLOAD</button>
-            <button class="filter-btn" data-filter="NETWORK">NETWORK</button>
-            <button class="filter-btn" data-filter="PHISHING">PHISHING</button>
-            <button class="filter-btn" data-filter="STRUCTURE">STRUCTURE</button>
-          </div>
-        </div>
-
-        <!-- Attack Lab Grid -->
-        <div id="attack-lab-grid" class="attack-lab-grid">
-          <!-- Will be populated by JavaScript -->
-        </div>
-
-        <!-- Attack Lab Result Panel -->
-        <div id="attack-lab-result" class="attack-lab-result hidden">
-          <div class="result-header">
-            <h3 id="lab-result-title">Attack Lab Result</h3>
-            <button class="btn-icon" id="close-lab-result">
-              <i data-lucide="x"></i>
-            </button>
-          </div>
-          <div class="result-content">
-            <div class="result-example">
-              <strong>Example URL:</strong>
-              <code id="lab-example-url" class="font-mono"></code>
-            </div>
-            <div class="result-verdict">
-              <div class="verdict-display">
-                <span class="verdict-label">VERDICT</span>
-                <span id="lab-verdict" class="verdict-value">SUSPICIOUS</span>
-              </div>
-              <div class="score-display">
-                <span class="score-label">RISK SCORE</span>
-                <span id="lab-score" class="score-value">78 / 100</span>
-              </div>
-            </div>
-            <div class="result-explanation">
-              <h4>Why is this suspicious?</h4>
-              <p id="lab-explanation">Explanation will appear here.</p>
-            </div>
-            <div class="result-actions">
-              <button id="lab-run-again" class="btn btn-secondary">
-                <i data-lucide="repeat"></i> Run Again
-              </button>
-              <button id="lab-view-full" class="btn btn-primary">
-                <i data-lucide="external-link"></i> View Full Analysis
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </section>
 
     <!-- PHISHING GALLERY Tab -->

