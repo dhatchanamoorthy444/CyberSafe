@@ -76,6 +76,20 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Global focus-visible ring */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Smooth scrolling */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 .font-mono {
   font-family: var(--font-mono);
 }
@@ -180,8 +194,7 @@ body {
 }
 
 .nav-links {
-  display: flex;
-  gap: 1rem;
+  display: none !important;
 }
 
 .nav-link {
@@ -566,6 +579,109 @@ body {
   background: rgba(56, 189, 248, 0.08);
   border-color: rgba(56, 189, 248, 0.4);
   color: var(--text-muted);
+}
+
+/* Comprehensive responsive viewport coverage */
+@media (min-width: 320px) {
+  .hero {
+    padding-block: 1.5rem;
+  }
+  .hero-title {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+  }
+  .btn {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 375px) {
+  .main-content {
+    gap: calc(var(--gap) * 1.5);
+  }
+  .glass-card {
+    padding: 1.25rem;
+  }
+}
+
+@media (min-width: 430px) {
+  .input-group {
+    flex-wrap: wrap;
+  }
+  .url-input {
+    min-width: 250px;
+  }
+  .btn {
+    min-width: 120px;
+  }
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    grid-template-columns: 2fr 1fr;
+    gap: calc(var(--gap) * 2);
+  }
+  .hero {
+    padding-block: 3rem;
+  }
+  .hero-title {
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
+  }
+  .glass-card {
+    padding: 1.5rem;
+  }
+  .result-actions-bar {
+    flex-wrap: wrap;
+  }
+  .result-actions-bar .btn {
+    flex: 1;
+    min-width: 150px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-content {
+    grid-template-columns: 2.5fr 1fr;
+    gap: calc(var(--gap) * 3);
+  }
+  .hero-container {
+    max-width: 900px;
+  }
+  .glass-card {
+    padding: 2rem;
+  }
+  .verdict-banner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .verdict-metrics {
+    justify-content: flex-end;
+  }
+}
+
+@media (min-width: 1280px) {
+  .main-content {
+    grid-template-columns: 3fr 1fr;
+  }
+  .hero-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+  }
+}
+
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1400px;
+  }
+  .hero-title {
+    font-size: clamp(2.25rem, 4vw, 3.5rem);
+  }
+  .hero-subtitle {
+    font-size: 1.125rem;
+  }
+  .glass-card {
+    padding: 2.5rem;
+  }
 }
 
 .qr-warning-header {
