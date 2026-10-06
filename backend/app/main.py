@@ -31,7 +31,7 @@ from app.recon import run_recon
 from app.adapters.vendors import check_providers
 import asyncio
 from app.adapters.threat_intel import check_virustotal
-from app.adapters.security_ai import explain_findings
+from app.adapters.security_ai import explain_findings, explain_url_findings
 
 # ── Rate limiter ─────────────────────────────────────────────────────────────
 RATE_LIMIT = os.environ.get("RATE_LIMIT", "30/minute")
@@ -76,6 +76,9 @@ async def log_routes():
 # ── Request / Response models ─────────────────────────────────────────────────
 class AnalyzeRequest(BaseModel):
     url: str = Field(..., min_length=1, max_length=4096)
+class AIExplanationRequest(BaseModel):
+    url: str = Field(..., min_length=1, max_length=4096)
+    findings: list = Field(..., description="URL structure findings from offline analysis")
 
 
 class ReconRequest(BaseModel):
