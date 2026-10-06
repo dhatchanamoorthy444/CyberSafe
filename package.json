@@ -9,7 +9,7 @@
     "audit": "python final_audit.py"
   },
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "private": true
 }
