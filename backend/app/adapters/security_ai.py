@@ -42,7 +42,17 @@ async def explain_findings(findings: list, url: str) -> Dict[str, Any]:
                 return {"explanation": "Analysis failed.", "risk_summary": "N/A."}
 
             data = response.json()
-            return json.loads(data["choices"][0]["message"]["content"])
+            try:
+                content = data["choices"][0]["message"]["content"]
+                result = json.loads(content)
+                # Validate structure
+                if not isinstance(result, dict) or not all(k in result for k in ("explanation", "risk_summary")):
+                    logger.error(f"Groq returned invalid structure: {content}")
+                    return {"explanation": "Analysis failed.", "risk_summary": "N/A."}
+                return result
+            except (json.JSONDecodeError, KeyError, TypeError) as e:
+                logger.error(f"Failed to parse Groq response: {e}, content: {data.get('choices', [{}])[0].get('message', {}).get('content', 'N/A')}")
+                return {"explanation": "Analysis failed.", "risk_summary": "N/A."}
 
     except httpx.TimeoutException:
         return {"explanation": "Analysis timed out.", "risk_summary": "N/A."}

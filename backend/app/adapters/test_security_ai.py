@@ -22,7 +22,7 @@ class TestSecurityAI:
                 mock_response = AsyncMock()
                 mock_response.status_code = 500
                 mock_response.text = "Internal Server Error"
-                mock_client.return_value.__aenter__.return_value.get.return_value = mock_response
+                mock_client.return_value.__aenter__.return_value.post.return_value = mock_response
 
                 result = await explain_findings([{'type': 'phishing', 'severity': 'high'}], 'https://example.com')
                 assert result['explanation'] == "Analysis failed."

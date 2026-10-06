@@ -216,8 +216,30 @@
             <!-- IOC Extraction Panel -->
             <div id="ai-explanation-panel" class="glass-card hidden">
               <div class="card-header">
-                <h3><i data-lucide="bot"></i> AI Security Explanation</h3>
-                <span class="safe-mode-label" style="background:#5B21B6;color:#E9D5FF">Powered by Groq Llama 3</span>
+                <h3><i data-lucide="bot"></i> Folax AI Security Analysis</h3>
+                <span class="safe-mode-label">Heuristic Analysis</span>
+              </div>
+              <div class="card-content">
+                <div class="analysis-section">
+                  <h4>Overview</h4>
+                  <p>AI-powered heuristic analysis of URL structure and patterns.</p>
+                </div>
+                <div class="analysis-section">
+                  <h4>Key Findings</h4>
+                  <ul id="ai-findings-list"></ul>
+                </div>
+                <div class="analysis-section">
+                  <h4>Risk Indicators</h4>
+                  <p id="ai-risk-indicators">Loading risk assessment...</p>
+                </div>
+                <div class="analysis-section">
+                  <h4>Recommendations</h4>
+                  <p id="ai-recommendations">Analyzing for potential security concerns...</p>
+                </div>
+                <div class="analysis-section">
+                  <h4>Limitations</h4>
+                  <p id="ai-limitations">This analysis is based on URL structure patterns and does not evaluate destination content or live behavior.</p>
+                </div>
               </div>
               <div id="ai-explanation-content" style="padding:1rem"></div>
             </div>

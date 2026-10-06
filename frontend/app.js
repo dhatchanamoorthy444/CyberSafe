@@ -270,14 +270,21 @@ async function handleAnalyze(url) {
 
 function renderAIExplanation(ai) {
   const panel = document.getElementById('ai-explanation-panel');
-  if (!panel || !ai.explanation) return;
+  if (!panel) return;
   panel.classList.remove('hidden');
 
   const content = document.getElementById('ai-explanation-content');
-  content.innerHTML = `
-    <p><strong>Explanation:</strong> ${escapeHTML(ai.explanation)}</p>
-    <p style="margin-top:0.5rem"><strong>Risk Summary:</strong> ${escapeHTML(ai.risk_summary)}</p>
+  if (!content) return;
+
+  let html = `
+    <p><strong>Analysis Summary:</strong> ${escapeHTML(ai.explanation || 'No analysis available')}</p>
   `;
+
+  if (ai.risk_summary && ai.risk_summary !== 'N/A' && ai.risk_summary !== 'Analysis failed.') {
+    html += `<p style="margin-top:0.5rem"><strong>Risk Assessment:</strong> ${escapeHTML(ai.risk_summary)}</p>`;
+  }
+
+  content.innerHTML = html;
 }
 
 // ============================================================================
