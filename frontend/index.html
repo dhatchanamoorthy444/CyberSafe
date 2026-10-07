@@ -1,621 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>CyberSafe | Explainable URL Risk Engine</title>
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="style.css">
-
-  <!-- Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- QR Code Scanner Library -->
-  <script src="https://unpkg.com/html5-qrcode" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberSafe Hub — Security Intelligence Platform</title>
+<style>
+:root{--bg:#0b0f19;--card:#0f172a;--border:#1e293b;--text:#e2e8f0;--accent:#38bdf8;--danger:#f87171;--warn:#fbbf24;--success:#34d399;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter','Segoe UI',system-ui,sans-serif}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+nav{display:flex;align-items:center;padding:1rem 2rem;background:#050814;border-bottom:1px solid var(--border);gap:2rem}
+nav .logo{font-weight:800;font-size:1.1rem;letter-spacing:-0.5px;color:var(--text);display:flex;align-items:center;gap:.5rem}
+.search{flex:1;max-width:720px;margin:0 auto;position:relative}
+.search input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:9999px;padding:.65rem 1.25rem;color:var(--text);outline:none;font-size:.9rem}
+main{max-width:1100px;margin:0 auto;padding:2rem;width:100%}
+h1{font-weight:700;font-size:2.25rem;letter-spacing:-1px;margin-bottom:.25rem}
+.sub{color:#94a3b8;font-size:.95rem;margin-bottom:2rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem;margin-top:1.5rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:1.25rem;transition:transform .15s ease,box-shadow .2s ease;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(0,0,0,.35)}
+.card .badge{display:inline-block;padding:.15rem .5rem;border-radius:9999px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.card .badge.danger{background:#7f1d1d;color:#fca5a5}
+.card .badge.warn{background:#713f12;color:#fcd34d}
+.card .badge.success{background:#064e3b;color:#6ee7b7}
+.card h3{font-size:1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+.card p{color:#94a3b8;font-size:.85rem;line-height:1.45}
+.card button{margin-top:.75rem;background:var(--accent);color:#0b0f19;border:none;padding:.45rem .9rem;border-radius:.5rem;font-weight:700;font-size:.8rem;cursor:pointer}
+.card button:hover{filter:brightness(1.1)}
+section{margin-top:3rem}
+section h2{font-size:1.1rem;font-weight:700;margin-bottom:1rem;letter-spacing:-.3px}
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+.features .pill{display:flex;align-items:center;gap:.75rem;padding:.6rem 1rem;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:.75rem;font-size:.85rem;color:#cbd5e1}
+</style>
 </head>
 <body>
+<nav>
+  <div class="logo"><span style="color:var(--accent);font-size:1.25rem">●</span> CyberSafe</div>
+  <div class="search"><input placeholder="Analyze URL, domain, or payload..." autocomplete="off"></div>
+  <div style="font-size:.75rem;color:#64748b;white-space:nowrap">OFFLINE ENGINE</div>
+</nav>
 
-  <!-- Navigation / Header -->
-  <nav class="navbar">
-    <div class="container nav-container">
-      <div class="brand">
-        <i data-lucide="shield-check" class="brand-icon"></i>
-        <span>CyberSafe</span>
-        <div class="badge">OFFLINE ENGINE</div>
-      </div>
-      <!-- API Docs link — hidden from UI, backend endpoint preserved -->
-      <div class="nav-links" style="display:none" aria-hidden="true">
-        <a href="https://cybersafebackend.onrender.com/docs" target="_blank" rel="noopener noreferrer" class="nav-link" title="API Docs" tabindex="-1">
-          <i data-lucide="book-open"></i>
-        </a>
-      </div>
+<main>
+  <h1>Security Intelligence Hub</h1>
+  <p class="sub">Scan. Analyze. Monitor. Protect.</p>
+
+  <section aria-label="Quick Actions">
+    <h2>Quick Access</h2>
+    <div class="grid">
+      <article class="card">
+        <h3><span class="badge danger">Live</span> SCAN</h3>
+        <p>Instant URL & payload risk screening with explainable AI and threat-intelligence correlation.</p>
+        <button onclick="alert('Scan started (simulated).')">Analyze Now</button>
+      </article>
+      <article class="card">
+        <h3><span class="badge warn">Intelligence</span> RECON</h3>
+        <p>Deep infrastructure analysis: subdomains, SSL certs, tech fingerprint, CVE mapping, historical malware.</p>
+        <button onclick="alert('Recon started (simulated).')">Start Recon</button>
+      </article>
+      <article class="card">
+        <h3><span class="badge warn">Intelligence</span> CAMPAIGN</h3>
+        <p>Cluster URLs into campaigns with timeline, actor attribution, and IOC sharing.</p>
+        <button onclick="alert('Campaign tracker simulated.')">Open Tracker</button>
+      </article>
+      <article class="card">
+        <h3><span class="badge success">Operations</span> SOC</h3>
+        <p>Bulk triage, analyst notes, blocklist exports, and team-level intelligence dashboards.</p>
+        <button onclick="alert('SOC dashboard simulated.')">Enter SOC</button>
+      </article>
     </div>
-  </nav>
+  </section>
 
-  <!-- Hero Section -->
-  <header class="hero">
-    <div class="container hero-container">
-      <h1 class="hero-title">
-        See the destination.<br>
-        <span class="text-gradient">Understand the risk.</span> Stay safe.
-      </h1>
-      <p class="hero-subtitle">
-        Deterministic, explainable URL &amp; QR risk screening. No destination requests are made during analysis.
-      </p>
-      <!-- SAFE ANALYSIS MODE badge -->
-      <div class="safe-mode-banner">
-        <div class="safe-mode-items">
-          <span class="safe-mode-item"><i data-lucide="shield-off"></i> No destination requests</span>
-          <span class="safe-mode-item"><i data-lucide="eye-off"></i> No URL fetching</span>
-          <span class="safe-mode-item"><i data-lucide="wifi-off"></i> No DNS resolution</span>
-          <span class="safe-mode-item"><i data-lucide="lock"></i> Analyzes structure only</span>
-        </div>
-      </div>
+  <section aria-label="Intelligence Tools" style="margin-top:3rem">
+    <h2>Intelligence Tools</h2>
+    <div class="features">
+      <div class="pill"><strong>Phishing Intelligence</strong> — Visual database of scams</div>
+      <div class="pill"><strong>Live Threat Stream</strong> — Real-time feed of new detections</div>
+      <div class="pill"><strong>Infrastructure Recon</strong> — Deep subdomain & cert analysis</div>
+      <div class="pill"><strong>SOC Dashboard</strong> — Command center for bulk triage</div>
     </div>
-  </header>
-
-  <!-- Main Navigation Tabs -->
-  <div class="container">
-    <nav class="main-nav">
-      <button class="nav-tab active" data-tab="scan">
-        <i data-lucide="search"></i>
-        <span>SCAN</span>
-      </button>
-      <button class="nav-tab" data-tab="phishing-gallery">
-        <i data-lucide="eye"></i>
-        <span>PHISHING GALLERY</span>
-      </button>
-      <button class="nav-tab" data-tab="threat-feed">
-        <i data-lucide="rss"></i>
-        <span>THREAT FEED</span>
-      </button>
-      <button class="nav-tab" data-tab="url-compare">
-        <i data-lucide="git-compare"></i>
-        <span>COMPARE</span>
-      </button>
-      <button class="nav-tab" data-tab="campaign">
-        <i data-lucide="layers"></i>
-        <span>CAMPAIGN</span>
-      </button>
-      <button class="nav-tab" data-tab="soc">
-        <i data-lucide="clipboard-list"></i>
-        <span>SOC</span>
-      </button>
-      <button class="nav-tab" data-tab="recon">
-        <i data-lucide="target"></i>
-        <span>RECON</span>
-      </button>
-      <button class="nav-tab" data-tab="history">
-        <i data-lucide="history"></i>
-        <span>HISTORY</span>
-      </button>
-    </nav>
-  </div>
-
-  <main class="container main-content">
-
-    <!-- SCAN Tab -->
-    <section class="tab-panel active" id="scan-tab">
-      <div class="analyzer-section">
-        <!-- Input Card -->
-        <div class="glass-card input-card">
-          <div class="card-header">
-            <h2><i data-lucide="link"></i> Analyze Link or Payload</h2>
-          </div>
-          <form id="analyze-form" class="analyze-form">
-<div class="input-group">
-            <input
-              type="text"
-              id="url-input"
-              class="url-input"
-              placeholder="Paste suspicious URL, phishing link, or payload..."
-              autocomplete="off"
-              spellcheck="false"
-              required>
-            <button type="submit" id="analyze-btn" class="btn btn-primary" title="Analyze URL structure">
-              <i data-lucide="search"></i> <span>Analyze</span>
-            </button>
-            <button type="button" id="qr-toggle-btn" class="btn btn-secondary" title="Scan QR Code">
-              <i data-lucide="qr-code"></i> <span>Scan QR</span>
-            </button>
-          </div>
-            <div class="security-notice">
-              <i data-lucide="info"></i>
-              <span>CyberSafe analyzes the URL structure without visiting the destination. No data is sent to the target.</span>
-            </div>
-          </form>
-
-          <!-- QR Scanner Area (Hidden by default) -->
-          <div id="qr-reader-container" class="qr-container hidden">
-            <div class="qr-header">
-              <h3>QR Code Scanner</h3>
-              <button type="button" id="qr-close-btn" class="btn-icon"><i data-lucide="x"></i></button>
-            </div>
-            <div id="qr-reader"></div>
-            <p class="qr-help">Position the QR code within the frame, or upload an image.</p>
-          </div>
-        </div>
-
-        <!-- State Displays -->
-        <div id="loading-state" class="state-container hidden">
-          <div class="scanline-loader"></div>
-          <p id="loading-text">Analyzing URL structure...</p>
-          <div id="loading-stages" class="loading-stages">
-            <div class="stage-item" id="stage-1"><i data-lucide="check-circle-2"></i> 1. Parsing URL Anatomy</div>
-            <div class="stage-item" id="stage-2"><i data-lucide="circle"></i> 2. Checking Deception & Lookalikes</div>
-            <div class="stage-item" id="stage-3"><i data-lucide="circle"></i> 3. Evaluating IP & Hostname</div>
-            <div class="stage-item" id="stage-4"><i data-lucide="circle"></i> 4. Analyzing Path & Patterns</div>
-            <div class="stage-item" id="stage-5"><i data-lucide="circle"></i> 5. Cross-Referencing Threat Intelligence</div>
-            <div class="stage-item" id="stage-6"><i data-lucide="circle"></i> 6. Preparing AI Security Explanation</div>
-            <div class="stage-item" id="stage-7"><i data-lucide="circle"></i> 7. Building Comprehensive Report</div>
-          </div>
-        </div>
-
-        <div id="error-state" class="state-container error-container hidden">
-          <i data-lucide="alert-triangle" class="error-icon"></i>
-          <h3 id="error-title">Analysis Failed</h3>
-          <p id="error-message">Could not complete the request.</p>
-          <div class="error-actions">
-            <button class="btn btn-secondary" onclick="document.getElementById('error-state').classList.add('hidden')">
-              Dismiss
-            </button>
-          </div>
-        </div>
-
-        <!-- Results Container -->
-        <div id="results-container" class="results-container hidden">
-          <!-- Verdict Banner -->
-          <div class="verdict-banner" id="verdict-banner">
-            <div class="verdict-main">
-              <div class="verdict-icon" id="verdict-icon"></div>
-              <div class="verdict-details">
-                <h2 id="verdict-title">VERDICT</h2>
-                <p id="verdict-recommendation">Recommendation goes here.</p>
-              </div>
-            </div>
-            <div class="verdict-metrics">
-              <div class="metric-box">
-                <span class="metric-label">Risk Score</span>
-                <span class="metric-value font-mono" id="score-text">0/100</span>
-              </div>
-              <div class="metric-box">
-                <span class="metric-label">Confidence</span>
-                <span class="metric-value" id="confidence-text">HIGH</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Offline Analysis Results -->
-          <div id="offline-results">
-
-            <!-- Risk score breakdown -->
-            <div class="glass-card risk-score-card">
-              <div class="card-header">
-                <h3><i data-lucide="bar-chart-2"></i> Risk Score Breakdown</h3>
-                <button id="export-report-btn" class="btn-text hidden" title="Copy security report to clipboard">
-                  <i data-lucide="clipboard-copy"></i> Copy Report
-                </button>
-              </div>
-              <div id="risk-score-breakdown"></div>
-            </div>
-
-            <div class="analysis-grid">
-              <!-- URL Anatomy with visual breakdown -->
-              <div class="glass-card anatomy-card">
-                <div class="card-header">
-                  <h3><i data-lucide="microscope"></i> URL Anatomy</h3>
-                </div>
-                <div id="anatomy-visual" class="anatomy-visual"></div>
-                <div class="anatomy-grid" id="anatomy-grid"></div>
-              </div>
-
-              <!-- Explainable findings -->
-              <div class="glass-card findings-card">
-                <div class="card-header">
-                  <h3><i data-lucide="shield-alert"></i> Detection Rules</h3>
-                  <span class="findings-count" id="findings-count">0 triggered</span>
-                </div>
-                <div class="findings-list" id="findings-list"></div>
-              </div>
-            </div>
-
-            <!-- IOC Extraction Panel -->
-            <div id="ai-explanation-panel" class="glass-card hidden">
-              <div class="card-header">
-                <h3><i data-lucide="bot"></i> Folax AI Security Analysis</h3>
-                <span class="safe-mode-label">Heuristic Analysis</span>
-              </div>
-              <div class="card-content">
-                <div class="analysis-section">
-                  <h4>Overview</h4>
-                  <p>AI-powered heuristic analysis of URL structure and patterns.</p>
-                </div>
-                <div class="analysis-section">
-                  <h4>Key Findings</h4>
-                  <ul id="ai-findings-list"></ul>
-                </div>
-                <div class="analysis-section">
-                  <h4>Risk Indicators</h4>
-                  <p id="ai-risk-indicators">Loading risk assessment...</p>
-                </div>
-                <div class="analysis-section">
-                  <h4>Recommendations</h4>
-                  <p id="ai-recommendations">Analyzing for potential security concerns...</p>
-                </div>
-                <div class="analysis-section">
-                  <h4>Limitations</h4>
-                  <p id="ai-limitations">This analysis is based on URL structure patterns and does not evaluate destination content or live behavior.</p>
-                </div>
-              </div>
-              <div id="ai-explanation-content" style="padding:1rem"></div>
-            </div>
-
-            <!-- IOC Extraction Panel -->
-            <div id="ioc-panel" class="glass-card hidden">
-              <div class="card-header">
-                <h3><i data-lucide="target"></i> Indicator Extraction</h3>
-                <button id="copy-ioc-btn" class="btn-text">
-                  <i data-lucide="copy"></i> Copy Indicators
-                </button>
-              </div>
-              <div id="ioc-grid" class="ioc-grid"></div>
-            </div>
-
-            <!-- Result Actions — Phase 19 -->
-            <div class="result-actions-bar">
-              <button id="analyze-another-btn" class="btn btn-secondary">
-                <i data-lucide="refresh-cw"></i> Analyze Another
-              </button>
-              <button id="copy-result-btn" class="btn btn-secondary">
-                <i data-lucide="clipboard-copy"></i> Copy Result
-              </button>
-            </div>
-
-            <!-- Security vendors' analysis -->
-            <div class="glass-card vendor-analysis-card" id="vendor-analysis-card" style="margin-top:1rem">
-              <div class="card-header">
-                <h3><i data-lucide="shield-check"></i> Security vendors' analysis</h3>
-                <span class="safe-mode-label" id="vendor-config-label">No providers configured</span>
-              </div>
-              <div id="vendor-summary" class="vendor-summary"></div>
-              <div class="vendor-controls">
-                <input type="text" id="vendor-search" class="search-input" placeholder="Search vendors..." autocomplete="off">
-                <div class="filter-buttons vendor-filters" id="vendor-filters">
-                  <button class="filter-btn active" data-vendor-filter="ALL">All</button>
-                  <button class="filter-btn" data-vendor-filter="malicious">Malicious</button>
-                  <button class="filter-btn" data-vendor-filter="suspicious">Suspicious</button>
-                  <button class="filter-btn" data-vendor-filter="clean">Clean</button>
-                  <button class="filter-btn" data-vendor-filter="unrated">Unrated</button>
-                  <button class="filter-btn" data-vendor-filter="not_checked">Not checked</button>
-                  <button class="filter-btn" data-vendor-filter="error">Error</button>
-                </div>
-              </div>
-              <div id="vendor-list" class="vendor-table-wrap"></div>
-            </div>
-
-            <!-- Network Transparency — Phase 17 -->
-            <div class="glass-card network-transparency-card" style="margin-top:1.5rem">
-              <div class="card-header">
-                <h3><i data-lucide="activity"></i> Analysis Method</h3>
-                <span class="safe-mode-label">Offline Only</span>
-              </div>
-              <div id="network-transparency"></div>
-            </div>
-
-            <!-- Technical Details collapsible — Phase 18 -->
-            <div class="glass-card technical-details-card" style="margin-top:1rem">
-              <button id="technical-details-btn" class="technical-details-toggle" aria-expanded="false" onclick="toggleTechnicalDetails()">
-                <i data-lucide="chevron-down"></i>
-                <span class="toggle-label">Show Technical Details</span>
-              </button>
-              <div id="technical-details-panel" class="hidden"></div>
-            </div>
-
-            <!-- Safe Analysis Mode explanation -->
-            <div class="glass-card safe-analysis-card" style="margin-top:1.5rem">
-              <div class="card-header">
-                <h3><i data-lucide="shield-check"></i> SAFE ANALYSIS MODE</h3>
-                <span class="safe-mode-label">Active</span>
-              </div>
-              <div class="safe-analysis-grid">
-                <div class="safe-analysis-item">
-                  <i data-lucide="check-circle"></i>
-                  <div>
-                    <strong>No destination requests</strong>
-                    <p>CyberSafe never fetches, visits, or pings the submitted URL.</p>
-                  </div>
-                </div>
-                <div class="safe-analysis-item">
-                  <i data-lucide="check-circle"></i>
-                  <div>
-                    <strong>Structural analysis only</strong>
-                    <p>The URL string itself is parsed and checked against detection rules.</p>
-                  </div>
-                </div>
-                <div class="safe-analysis-item">
-                  <i data-lucide="info"></i>
-                  <div>
-                    <strong>SAFE ≠ safe destination</strong>
-                    <p>No structural red flags were found. It does not guarantee the linked content is safe.</p>
-                  </div>
-                </div>
-                <div class="safe-analysis-item">
-                  <i data-lucide="check-circle"></i>
-                  <div>
-                    <strong>No data exfiltration</strong>
-                    <p>Your submitted URL is sent only to the CyberSafe analysis API — never to the target.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div><!-- /offline-results -->
-        </div><!-- /results-container -->
-
-      </div>
-
-      <!-- Sidebar / History -->
-      <aside class="sidebar">
-        <div class="glass-card history-card">
-          <div class="card-header">
-            <h3><i data-lucide="history"></i> Recent Scans</h3>
-            <button id="clear-history-btn" class="btn-text" title="Clear History">Clear</button>
-          </div>
-          <div class="history-search-wrap">
-            <input type="text" id="history-search" class="history-search" placeholder="Filter history..." autocomplete="off">
-          </div>
-          <div id="history-list" class="history-list">
-            <div class="empty-history" id="empty-history">
-              <p>No recent scans. Locally stored.</p>
-            </div>
-          </div>
-        </div>
-      </aside>
-    </section>
-
-    <!-- PHISHING GALLERY Tab -->
-    <section class="tab-panel" id="phishing-gallery-tab">
-      <div class="glass-card">
-        <div class="card-header">
-          <h2><i data-lucide="eye"></i> Phishing Gallery</h2>
-          <span class="gallery-badge">Educational Examples</span>
-        </div>
-        <p class="gallery-description">
-          Learn about common URL deception techniques through real-world examples. Each example demonstrates a different phishing method.
-        </p>
-
-        <div id="phishing-gallery-grid" class="phishing-gallery-grid">
-          <!-- Will be populated by JavaScript -->
-        </div>
-      </div>
-    </section>
-
-    <!-- THREAT FEED Tab -->
-    <section class="tab-panel" id="threat-feed-tab">
-      <div class="glass-card">
-        <div class="card-header">
-          <h2><i data-lucide="rss"></i> Threat Intelligence Feed</h2>
-          <span class="demo-badge">DEMO FEED</span>
-        </div>
-        <div class="threat-feed-warning">
-          <i data-lucide="alert-triangle"></i>
-          <div>
-            <strong>DEMO THREAT FEED</strong>
-            <p>This is demonstration data, not real threat intelligence. Never present demo data as actual threats.</p>
-          </div>
-        </div>
-
-        <div id="threat-feed-list" class="threat-feed-list">
-          <!-- Will be populated by JavaScript -->
-        </div>
-      </div>
-    </section>
-
-    <!-- URL COMPARE Tab -->
-    <section class="tab-panel" id="url-compare-tab">
-      <div class="glass-card">
-        <div class="card-header">
-          <h2><i data-lucide="git-compare"></i> URL Comparison</h2>
-          <span class="compare-badge">Side-by-Side Analysis</span>
-        </div>
-        <p class="compare-description">
-          Compare two URLs side-by-side to understand structural differences and security implications.
-        </p>
-
-        <div class="url-compare-inputs">
-          <div class="compare-input-group">
-            <label for="compare-url-a">URL A</label>
-            <input type="text" id="compare-url-a" class="url-input" placeholder="Enter first URL to compare...">
-          </div>
-          <div class="compare-input-group">
-            <label for="compare-url-b">URL B</label>
-            <input type="text" id="compare-url-b" class="url-input" placeholder="Enter second URL to compare...">
-          </div>
-        </div>
-
-        <button id="compare-urls-btn" class="btn btn-primary" style="width:100%;margin-bottom:1.5rem">
-          <i data-lucide="git-compare"></i> Compare URLs
-        </button>
-
-        <div id="compare-results" class="compare-results hidden">
-          <div class="compare-grid">
-            <div class="compare-panel">
-              <h3>URL A</h3>
-              <div id="compare-result-a" class="compare-result">
-                <!-- Results for URL A -->
-              </div>
-            </div>
-            <div class="compare-panel">
-              <h3>URL B</h3>
-              <div id="compare-result-b" class="compare-result">
-                <!-- Results for URL B -->
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- WATCHLIST Tab -->
-    <section class="tab-panel" id="watchlist-tab">
-      <div class="glass-card">
-        <div class="card-header">
-          <h2><i data-lucide="shield-check"></i> Intelligence Watchlist</h2>
-          <span class="gallery-badge">Frontend Demo</span>
-        </div>
-        <p style="margin-bottom:1rem">Continuous threat tracking for monitored URLs. Data shown is simulated (no backend call).</p>
-        <div class="vendor-controls" style="margin-bottom:1rem">
-          <input type="text" id="watchlist-search" class="search-input" placeholder="Filter watchlist..." autocomplete="off">
-          <div class="filter-buttons vendor-filters" id="watchlist-filters">
-            <button class="filter-btn active" data-filter="ALL">All</button>
-            <button class="filter-btn" data-filter="malicious">Malicious</button>
-            <button class="filter-btn" data-filter="clean">Clean</button>
-          </div>
-        </div>
-        <table class="watchlist-table" style="width:100%; border-collapse:collapse; color:#e2e8f0;">
-          <thead>
-            <tr style="text-align:left; border-bottom:1px solid #334155;">
-              <th>URL / Domain</th>
-              <th>Verdict</th>
-              <th>VT Detections</th>
-              <th>AI Confidence</th>
-              <th>Trend</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="watchlist-body">
-            <!-- Populated by app.js -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- CAMPAIGN Tab -->
-    <section class="tab-panel" id="campaign-tab">
-      <div class="glass-card">
-        <div class="card-header"><h2><i data-lucide="layers"></i> Campaign Tracker</h2></div>
-        <div class="analysis-grid">
-          <div class="glass-card" style="padding:1rem;">
-            <h3>Campaign PHISH-2024-001</h3>
-            <p><strong>Actor:</strong> FIN7-like (simulated)</p>
-            <ul style="font-size:0.85rem; color:#94a3b8; padding-left:1rem;">
-              <li>paypa1-security.com</li>
-              <li>api.paypa1-security.com</li>
-              <li>secure-bank.example</li>
-            </ul>
-            <p style="margin-top:0.5rem;"><strong>IOCs:</strong> 192.0.2.1 | evil.com</p>
-          </div>
-        </div>
-        <div style="margin-top:1rem;">
-          <h4>Timeline</h4>
-          <table class="watchlist-table" style="width:100%; border-collapse:collapse; color:#e2e8f0;">
-            <thead><tr><th>Date</th><th>Event</th></tr></thead>
-            <tbody>
-              <tr><td>2024-09-01</td><td>First domain registered</td></tr>
-              <tr><td>2024-09-05</td><td>Second URL observed</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- SOC Tab -->
-    <section class="tab-panel" id="soc-tab">
-      <div class="glass-card">
-        <div class="card-header"><h2><i data-lucide="clipboard-list"></i> SOC Workbench — Bulk Triage</h2></div>
-        <p>Paste URLs (one per line) for batch analysis.</p>
-        <textarea id="bulk-urls" rows="4" style="width:100%; background:#0f172a; color:#e2e8f0; border:1px solid #334155; border-radius:0.5rem; padding:0.75rem; font-family:inherit;"></textarea>
-        <div style="margin-top:0.5rem; display:flex; gap:0.5rem;">
-          <button class="btn btn-primary" onclick="runBulk()">Triage</button>
-          <button class="btn btn-secondary" onclick="exportCSV()">Export CSV</button>
-          <button class="btn btn-secondary" onclick="exportSTIX()">Export STIX</button>
-        </div>
-        <table class="watchlist-table" id="bulk-results" style="margin-top:1rem; width:100%; border-collapse:collapse; color:#e2e8f0;">
-          <thead><tr><th>URL</th><th>Verdict</th><th>Score</th><th>Action</th></tr></thead><tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- RECON Tab -->
-    <section class="tab-panel" id="recon-tab">
-      <div class="glass-card">
-        <div class="card-header">
-          <h2><i data-lucide="target"></i> Red Team Recon — Deep Analysis</h2>
-          <span class="gallery-badge">Demo / Live</span>
-        </div>
-        <p style="margin-bottom:1rem">Attack surface, tech fingerprint, certificate transparency, and historical malware correlation.</p>
-        <div class="analysis-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
-          <div class="glass-card" style="padding:1rem;">
-            <h3><i data-lucide="globe"></i> Subdomain Exposure</h3>
-            <ul style="font-size:0.85rem; color:#94a3b8; padding-left:1rem;">
-              <li>paypa1-security.com</li>
-              <li>www.paypa1-security.com</li>
-              <li>api.paypa1-security.com</li>
-            </ul>
-          </div>
-          <div class="glass-card" style="padding:1rem;">
-            <h3><i data-lucide="shield-check"></i> Certificate</h3>
-            <p>Valid • Not wildcard • Expiry 180d</p>
-          </div>
-          <div class="glass-card" style="padding:1rem;">
-            <h3><i data-lucide="cpu"></i> Tech Fingerprint</h3>
-            <p>nginx 1.18 · PHP 7.4 (simulated)</p>
-          </div>
-          <div class="glass-card" style="padding:1rem;">
-            <h3><i data-lucide="bug"></i> CVE Matches</h3>
-            <p>CVE-2024-0001 (simulated)</p>
-          </div>
-        </div>
-        <div style="margin-top:1rem; padding:1rem; background:#0f172a; border:1px solid #334155; border-radius:0.75rem;">
-          <strong>Recon Narrative (Gemini-style):</strong>
-          <p style="margin-top:0.5rem; color:#cbd5e1;">Attack surface assessment: subdomain exposure moderate. Historical VT associations clean in this check. Recommend continuous monitoring.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- HISTORY Tab -->
-    <section class="tab-panel" id="history-tab">
-      <div class="glass-card">
-        <div class="card-header">
-          <h2><i data-lucide="history"></i> Scan History</h2>
-          <div class="history-controls">
-            <input type="text" id="history-filter" class="search-input" placeholder="Filter history...">
-            <select id="history-verdict-filter" class="verdict-filter">
-              <option value="">All Verdicts</option>
-              <option value="SAFE">SAFE</option>
-              <option value="REVIEW">REVIEW</option>
-              <option value="SUSPICIOUS">SUSPICIOUS</option>
-            </select>
-            <button id="clear-all-history" class="btn btn-secondary">
-              <i data-lucide="trash-2"></i> Clear History
-            </button>
-          </div>
-        </div>
-
-        <div id="full-history-list" class="full-history-list">
-          <div class="empty-state" id="history-empty-state">
-            <i data-lucide="history"></i>
-            <h3>No scan history</h3>
-            <p>Your analysis history will appear here as you use CyberSafe.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="footer">
-    <div class="container text-center text-muted">
-      <p>&copy; 2026 CyberSafe. All telemetry is pseudonymized and stored securely.</p>
-    </div>
-  </footer>
-
-  <script type="module" src="app.js"></script>
+  </section>
+</main>
 </body>
 </html>
