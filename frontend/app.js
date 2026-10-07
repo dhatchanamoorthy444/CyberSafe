@@ -163,33 +163,6 @@ function switchToTab(tabId) {
 }
 
 // ============================================================================
-// Simplified Analysis Render
-// ============================================================================
-function renderSimplifiedAnalysis(analysis) {
-  const v = analysis.verdict;
-  verdictBanner.className = `verdict-banner ${v}`;
-  verdictTitle.textContent = v;
-  verdictRecommendation.textContent = analysis.recommendation || '';
-  // Risk score: 0-100 where higher means MORE dangerous (consistent labeling)
-  scoreText.textContent = `${Math.max(0, Math.min(100, analysis.score || 0))}`;
-  confidenceText.textContent = (analysis.confidence || '').toUpperCase();
-
-  const iconMap = { SAFE: 'shield-check', REVIEW: 'alert-circle', SUSPICIOUS: 'shield-alert' };
-  verdictIcon.innerHTML = `<i data-lucide="${iconMap[v] || 'shield'}"></i>`;
-
-  renderAnatomy(analysis);
-  renderFindings(analysis.findings || [], analysis.score);
-  renderRiskReportCard(analysis);
-  renderNetworkTransparency();
-  renderTechnicalDetails(analysis);
-
-  // Store last analysis for export and IOC
-  window._lastAnalysis = analysis;
-
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-// ============================================================================
 // Form Submission
 // ============================================================================
 async function handleFormSubmit(e) {
