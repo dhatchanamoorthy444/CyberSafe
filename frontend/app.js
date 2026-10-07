@@ -89,6 +89,7 @@ const DEMO_THREATS = [
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof lucide !== 'undefined') lucide.createIcons();
+  renderWatchlist();
 
   loadHistoryFromStorage();
   renderHistory();
@@ -138,6 +139,35 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================================================
 // Tab Navigation
 // ============================================================================
+function renderWatchlist() {
+  const tbody = document.getElementById('watchlist-body');
+  if (!tbody) return;
+  const mock = [
+    { url: 'https://paypa1-security.com/login', verdict: 'Malicious', vt: 42, ai: 91, trend: 'up' },
+    { url: 'https://secure-bank.example', verdict: 'Clean', vt: 0, ai: 78, trend: 'down' },
+    { url: 'https://phishing-campaign.net', verdict: 'Suspicious', vt: 12, ai: 65, trend: 'up' },
+  ];
+  tbody.innerHTML = mock.map((r, i) => `
+    <tr style="border-bottom:1px solid #1e293b;">
+      <td><a href="#" style="color:#60a5fa; text-decoration:none;">${r.url}</a></td>
+      <td><span class="badge ${r.verdict.toLowerCase()}">${r.verdict}</span></td>
+      <td>${r.vt} / 90</td>
+      <td>${r.ai}%</td>
+      <td>${r.trend === 'up' ? '📈 +4%' : '📉 -2%'}</td>
+      <td><button class="btn btn-secondary" onclick="generateTriage(${i})" style="padding:0.2rem 0.5rem; font-size:0.75rem;">Triage</button></td>
+    </tr>
+  `).join('');
+}
+
+function generateTriage(index) {
+  const mockReports = [
+    'Executive Summary: High-confidence phishing (91%). Attack vector: credential harvest via fake login. Infrastructure: bulletproof hosting, ASN 396982. Risk: 94/100.',
+    'Executive Summary: Clean structural profile (78% AI). No VT detections. Risk: 12/100. Recommend allow.',
+    'Executive Summary: Suspicious redirect patterns (65%). Potential drive-by component. Monitor closely.',
+  ];
+  alert('AI Triage Report (simulated)\n\n' + mockReports[index]);
+}
+
 function initTabNavigation() {
   document.querySelectorAll('.nav-tab').forEach(tab => {
     tab.addEventListener('click', () => {

@@ -79,6 +79,10 @@
         <i data-lucide="git-compare"></i>
         <span>COMPARE</span>
       </button>
+      <button class="nav-tab" data-tab="watchlist">
+        <i data-lucide="shield-check"></i>
+        <span>WATCHLIST</span>
+      </button>
       <button class="nav-tab" data-tab="history">
         <i data-lucide="history"></i>
         <span>HISTORY</span>
@@ -447,6 +451,40 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- WATCHLIST Tab -->
+    <section class="tab-panel" id="watchlist-tab">
+      <div class="glass-card">
+        <div class="card-header">
+          <h2><i data-lucide="shield-check"></i> Intelligence Watchlist</h2>
+          <span class="gallery-badge">Frontend Demo</span>
+        </div>
+        <p style="margin-bottom:1rem">Continuous threat tracking for monitored URLs. Data shown is simulated (no backend call).</p>
+        <div class="vendor-controls" style="margin-bottom:1rem">
+          <input type="text" id="watchlist-search" class="search-input" placeholder="Filter watchlist..." autocomplete="off">
+          <div class="filter-buttons vendor-filters" id="watchlist-filters">
+            <button class="filter-btn active" data-filter="ALL">All</button>
+            <button class="filter-btn" data-filter="malicious">Malicious</button>
+            <button class="filter-btn" data-filter="clean">Clean</button>
+          </div>
+        </div>
+        <table class="watchlist-table" style="width:100%; border-collapse:collapse; color:#e2e8f0;">
+          <thead>
+            <tr style="text-align:left; border-bottom:1px solid #334155;">
+              <th>URL / Domain</th>
+              <th>Verdict</th>
+              <th>VT Detections</th>
+              <th>AI Confidence</th>
+              <th>Trend</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="watchlist-body">
+            <!-- Populated by app.js -->
+          </tbody>
+        </table>
       </div>
     </section>
 
