@@ -1488,203 +1488,124 @@ body {
   border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
-/* Anatomy Grid */
-.anatomy-grid {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-}
-
-.anatomy-item {
+/* URL Summary (replacing anatomy grid) */
+.url-summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
   background: var(--bg-surface-elevated);
-  padding: 0.75rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  transition: border-color 0.2s;
+  font-size: 0.9rem;
+  flex-wrap: wrap;
 }
 
-.anatomy-item--warn {
-  border-color: var(--review-border);
-  background: var(--review-bg);
-}
-
-.anatomy-label {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.25rem;
-}
-
-.anatomy-value {
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  word-break: break-all;
+.url-summary-item {
   color: var(--text-main);
 }
 
-.anatomy-item--warn .anatomy-value {
-  color: var(--review-text);
-}
-
-/* Findings */
-.findings-count {
-  font-size: 0.85rem;
+.url-summary-item strong {
   color: var(--text-muted);
-  background: var(--bg-surface-elevated);
-  padding: 0.25rem 0.75rem;
-  border-radius: var(--radius);
-  white-space: nowrap;
+  font-weight: 500;
+  margin-right: 0.25rem;
 }
 
-.findings-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.finding-card {
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem;
-  transition: border-color 0.2s;
-}
-
-.finding-card:hover {
-  border-color: var(--border-focus);
-}
-
-.finding-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.finding-title {
-  font-weight: 600;
-  font-size: 0.95rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.severity-badge {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.severity-badge.high,
-.severity-badge.critical {
-  background: var(--suspicious-bg);
-  color: var(--suspicious-text);
-  border: 1px solid var(--suspicious-border);
-}
-
-.severity-badge.medium {
-  background: var(--review-bg);
-  color: var(--review-text);
-  border: 1px solid var(--review-border);
-}
-
-.severity-badge.low,
-.severity-badge.info {
-  background: var(--safe-bg);
-  color: var(--safe-text);
-  border: 1px solid var(--safe-border);
-}
-
-.finding-desc {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  margin-bottom: 0.5rem;
-  line-height: 1.5;
-}
-
-.finding-evidence {
-  background: var(--bg);
-  padding: 0.75rem;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
+.url-summary-divider {
   color: var(--text-dim);
-  border-left: 3px solid var(--accent-primary);
-  word-break: break-all;
+  font-weight: 300;
 }
 
-/* Phase 6: Explainable findings */
-.finding-expand-btn {
-  display: inline-flex;
+@media (max-width: 640px) {
+  .url-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .url-summary-divider {
+    display: none;
+  }
+}
+
+/* Alert Chips (simplified findings) */
+.alert-chip {
+  display: flex;
   align-items: center;
-  gap: 0.375rem;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--accent-primary);
-  border-radius: 6px;
-  padding: 0.375rem 0.75rem;
-  font-size: 0.8rem;
-  cursor: pointer;
-  margin-top: 0.5rem;
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid;
+  border-left: 4px solid;
+  margin-bottom: 0.75rem;
   transition: all 0.2s ease;
 }
 
-.finding-expand-btn:hover {
-  background: rgba(2, 132, 199, 0.08);
-  border-color: var(--accent-primary);
+.alert-chip-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
 }
 
-.finding-expand-btn svg {
-  width: 0.875rem;
-  height: 0.875rem;
-  transition: transform 0.2s ease;
+.alert-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
 }
 
-.finding-expand-btn[aria-expanded="true"] svg {
-  transform: rotate(180deg);
+.alert-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-.finding-explanation {
-  margin-top: 0.75rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  overflow: hidden;
-  animation: fadeIn 0.2s ease-out;
+.alert-title {
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 0.95rem;
 }
 
-.explain-section {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.explain-section:last-child {
-  border-bottom: none;
-}
-
-.explain-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-dim);
-  margin-bottom: 0.375rem;
-}
-
-.explain-text {
-  font-size: 0.875rem;
+.alert-desc {
+  font-size: 0.85rem;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.4;
 }
 
-.explain-section:nth-child(1) .explain-label { color: #60a5fa; }
-.explain-section:nth-child(2) .explain-label { color: var(--review-text); }
-.explain-section:nth-child(3) .explain-label { color: var(--safe-text); }
+/* Severity-based alert chip colors */
+.alert-chip--critical {
+  background: var(--suspicious-bg);
+  border-color: var(--suspicious-border);
+  color: var(--suspicious-text);
+}
+
+.alert-chip--high {
+  background: var(--suspicious-bg);
+  border-color: var(--suspicious-border);
+  color: var(--suspicious-text);
+}
+
+.alert-chip--medium {
+  background: var(--review-bg);
+  border-color: var(--review-border);
+  color: var(--review-text);
+}
+
+.alert-chip--low {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: var(--safe-text);
+}
+
+@media (max-width: 640px) {
+  .alert-chip {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .alert-chip-content {
+    flex-direction: column;
+  }
+}
 
 .clean-slate {
   text-align: center;
@@ -1699,6 +1620,33 @@ body {
 }
 
 /* Phase 7: Safe Analysis Card */
+/* Premium AI Analysis Section */
+#ai-explanation-panel {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(56, 189, 248, 0.05) 100%);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+#ai-explanation-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #7c3aed, #38bdf8);
+}
+
+#ai-explanation-panel .card-header h3 {
+  color: #c4b5fd;
+}
+
+#ai-explanation-panel .analysis-section h4 {
+  color: #93c5fd;
+  font-weight: 600;
+}
+
 .safe-analysis-card .safe-mode-label {
   font-size: 0.75rem;
   font-weight: 700;

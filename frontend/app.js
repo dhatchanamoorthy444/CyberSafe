@@ -335,7 +335,8 @@ function renderAIExplanation(ai) {
   if (!panel) return;
   panel.classList.remove('hidden');
 
-  // Update the overview section (already has static content, but we can enhance it)
+  // Clean Security Verdict Card format
+  // Update overview with AI explanation
   const overviewSection = panel.querySelector('.analysis-section h4');
   if (overviewSection && overviewSection.textContent === 'Overview') {
     const overviewP = overviewSection.nextElementSibling;
@@ -344,59 +345,47 @@ function renderAIExplanation(ai) {
     }
   }
 
-  // Populate Key Findings list
+  // Key Findings — clean bulleted list
   const findingsList = document.getElementById('ai-findings-list');
   if (findingsList && ai.key_findings && Array.isArray(ai.key_findings)) {
     if (ai.key_findings.length === 0) {
-      findingsList.innerHTML = '<li>No structural risk indicators detected in URL analysis.</li>';
+      findingsList.innerHTML = '<li>No structural risk indicators detected.</li>';
     } else {
       findingsList.innerHTML = ai.key_findings.map(finding =>
-        `<li>${escapeHTML(finding)}</li>`
+        `<li>• ${escapeHTML(finding)}</li>`
       ).join('');
     }
   }
 
-  // Populate Risk Indicators
+  // Risk Indicators — clean text
   const riskIndicators = document.getElementById('ai-risk-indicators');
   if (riskIndicators && ai.risk_indicators) {
     if (Array.isArray(ai.risk_indicators) && ai.risk_indicators.length > 0) {
       riskIndicators.innerHTML = ai.risk_indicators.map(indicator =>
-        `<p>${escapeHTML(indicator)}</p>`
+        `<p>• ${escapeHTML(indicator)}</p>`
       ).join('');
     } else if (typeof ai.risk_indicators === 'string') {
       riskIndicators.textContent = ai.risk_indicators;
-    } else {
-      riskIndicators.textContent = 'No specific risk indicators identified in the structural analysis.';
     }
   }
 
-  // Populate Recommendations
+  // Recommendations — clean
   const recommendations = document.getElementById('ai-recommendations');
   if (recommendations && ai.recommendations) {
     recommendations.textContent = ai.recommendations;
   }
 
-  // Update Limitations
+  // Remove the bulky Limitations section — keep it brief
   const limitations = document.getElementById('ai-limitations');
-  if (limitations && ai.limitations) {
-    limitations.textContent = ai.limitations;
+  if (limitations) {
+    limitations.innerHTML = `<span style="font-size:0.8rem;opacity:0.7;">Note: This analysis evaluates URL structure only. Destination content and live behavior were not evaluated.</span>`;
   }
 
-  // Update the legacy content div for backward compatibility
+  // Clean verdict card content for premium feel
   const content = document.getElementById('ai-explanation-content');
   if (content) {
-    let html = `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-subtle)">`;
-
-    if (ai.verdict_label) {
-      html += `<p><strong>Risk Level:</strong> ${escapeHTML(ai.verdict_label)}</p>`;
-    }
-
-    if (ai.risk_summary && ai.risk_summary !== 'N/A' && ai.risk_summary !== 'Analysis failed.') {
-      html += `<p><strong>Summary:</strong> ${escapeHTML(ai.risk_summary)}</p>`;
-    }
-
-    html += `</div>`;
-    content.innerHTML = html;
+    // Give AI section a distinct premium background via inline style
+    content.innerHTML = '';
   }
 }
 
@@ -436,32 +425,35 @@ function renderAnalysisResults(analysis) {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-// URL Anatomy with visual highlights
+// URL Summary (replacing the large anatomy grid)
 function renderAnatomy(analysis) {
   const p = analysis.parsed || {};
 
-  // Visual URL decomposition bar
+  // Visual URL decomposition bar (keep this as it's useful)
   const anatomyVisual = document.getElementById('anatomy-visual');
   if (anatomyVisual) {
     anatomyVisual.innerHTML = buildURLVisual(analysis);
   }
 
-  const items = [
-    { label: 'Actual Hostname', value: analysis.actual_hostname || p.hostname || 'None', flag: p.has_userinfo ? 'warn' : '' },
-    { label: 'Scheme',          value: p.scheme || 'None', flag: p.scheme && !['https','http'].includes(p.scheme) ? 'warn' : '' },
-    { label: 'Userinfo (@)',    value: p.has_userinfo ? '⚠ Yes — Deceptive Pattern' : 'No', flag: p.has_userinfo ? 'warn' : '' },
-    { label: 'Port',            value: p.port || 'Default', flag: '' },
-    { label: 'Path',            value: p.path || '/', flag: '' },
-    { label: 'Query',           value: p.query || 'None', flag: '' },
-    { label: 'Fragment',        value: p.fragment || 'None', flag: '' },
-    { label: 'Punycode',        value: p.is_punycode ? `⚠ Yes — ${p.unicode_hostname || 'IDN'}` : 'No', flag: p.is_punycode ? 'warn' : '' },
-    { label: 'URL Length',      value: `${(p.original_url || '').length} chars`, flag: (p.original_url || '').length > 100 ? 'warn' : '' },
-  ];
-  anatomyGrid.innerHTML = items.map(i => `
-    <div class="anatomy-item${i.flag ? ' anatomy-item--' + i.flag : ''}">
-      <div class="anatomy-label">${escapeHTML(i.label)}</div>
-      <div class="anatomy-value">${escapeHTML(String(i.value))}</div>
-    </div>`).join('');
+  // Replace the 8-box grid with a clean summary line
+  const hostname = analysis.actual_hostname || p.hostname || 'Unknown';
+  const urlLength = (p.original_url || '').length;
+  const scheme = p.scheme || 'Unknown';
+
+  anatomyGrid.innerHTML = `
+    <div class="url-summary">
+      <span class="url-summary-item">
+        <strong>Hostname:</strong> ${escapeHTML(hostname)}
+      </span>
+      <span class="url-summary-divider">|</span>
+      <span class="url-summary-item">
+        <strong>Length:</strong> ${urlLength} chars
+      </span>
+      <span class="url-summary-divider">|</span>
+      <span class="url-summary-item">
+        <strong>Scheme:</strong> ${escapeHTML(scheme)}
+      </span>
+    </div>`;
 }
 
 // Build visual URL breakdown
@@ -733,35 +725,27 @@ function renderFindings(findings, totalScore) {
     if (typeof lucide !== 'undefined') lucide.createIcons();
     return;
   }
+
+  // Simplified Alert Chips instead of bulky cards
   findingsList.innerHTML = findings.map((f, idx) => {
-    const exp = getFindingExplanation(f);
-    const expandId = `finding-expand-${idx}`;
+    const iconMap = {
+      'high': '❌',
+      'critical': '🚨',
+      'medium': '⚠️',
+      'low': 'ℹ️'
+    };
+    const icon = iconMap[f.severity] || '⚠️';
+
     return `
-    <div class="finding-card">
-      <div class="finding-header">
-        <span class="finding-title">${escapeHTML(f.title)}</span>
+    <div class="alert-chip alert-chip--${escapeHTML(f.severity)}">
+      <div class="alert-chip-content">
+        <span class="alert-icon">${icon}</span>
+        <div class="alert-main">
+          <span class="alert-title">${escapeHTML(f.title)}</span>
+          <span class="alert-desc">${escapeHTML(f.message)}</span>
+        </div>
         <span class="severity-badge ${escapeHTML(f.severity)}">${escapeHTML(f.severity)}</span>
       </div>
-      <div class="finding-desc">${escapeHTML(f.message)}</div>
-      ${f.evidence ? `<div class="finding-evidence">Evidence: ${escapeHTML(f.evidence)}</div>` : ''}
-      ${exp ? `
-      <button class="finding-expand-btn" aria-expanded="false" aria-controls="${expandId}" onclick="toggleFindingExpand(this, '${expandId}')">
-        <i data-lucide="chevron-down"></i> Explain this finding
-      </button>
-      <div class="finding-explanation hidden" id="${expandId}">
-        <div class="explain-section">
-          <div class="explain-label">WHAT</div>
-          <div class="explain-text">${escapeHTML(exp.what)}</div>
-        </div>
-        <div class="explain-section">
-          <div class="explain-label">WHY</div>
-          <div class="explain-text">${escapeHTML(exp.why)}</div>
-        </div>
-        <div class="explain-section">
-          <div class="explain-label">ACTION</div>
-          <div class="explain-text">${escapeHTML(exp.action)}</div>
-        </div>
-      </div>` : ''}
     </div>`;
   }).join('');
   if (typeof lucide !== 'undefined') lucide.createIcons();
