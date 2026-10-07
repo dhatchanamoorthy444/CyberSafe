@@ -190,22 +190,19 @@ async def analyze_endpoint(
         analysis = analyze_url(url)
         background_tasks.add_task(persist_scan, analysis, request_id)
 
-        # Phase 2: AI & VT (parallel external calls)
+        # Phase 2: AI & VT (parallel external calls) — use Promise.allSettled semantics via asyncio.gather with return_exceptions
         findings = analysis.get("findings", [])
+        from app.adapters.security_ai import explain_findings, groq_explain, folax_explain
         tasks = [
             check_virustotal(url),
-            explain_findings(
-                findings,
-                url,
-                verdict=analysis.get("verdict", "SAFE"),
-                score=analysis.get("score", 0),
-                parsed=analysis.get("parsed") or {},
-            )
+            groq_explain(findings, url, verdict=analysis.get("verdict","SAFE"), score=analysis.get("score",0), parsed=analysis.get("parsed") or {}),
+            folax_explain(findings, url, verdict=analysis.get("verdict","SAFE"), score=analysis.get("score",0), parsed=analysis.get("parsed") or {}),
         ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        threat_intel = results[0] if not isinstance(results[0], Exception) else {"vendor": "VirusTotal", "status": "error", "checked": True, "details": "VirusTotal integration failed."}
-        ai_explanation = results[1] if not isinstance(results[1], Exception) else {"explanation": "AI explanation unavailable.", "risk_summary": "Analysis failed."}
+        threat_intel = results[0] if not isinstance(results[0], Exception) else {"vendor":"VirusTotal","status":"unavailable","stats":{"malicious":0,"suspicious":0,"harmless":0,"undetected":0},"vendors":[]}
+        groq_result = results[1] if not isinstance(results[1], Exception) else {"status":"unavailable","summary":"","explanation":"","recommendation":"","confidence":""}
+        folax_result = results[2] if not isinstance(results[2], Exception) else {"status":"unavailable","summary":"","key_findings":[],"recommendation":"","confidence":""}
 
         # Also get any other configured providers
         configured_vendors = check_providers(url, "url")
@@ -230,18 +227,62 @@ async def analyze_endpoint(
             analysis.get("verdict"), analysis.get("score"),
         )
 
-        # Normalized response schema
+        # Normalized response schema — canonical, always JSON, external failures never break local analysis
         return {
             "success": True,
             "analysis": analysis,
-            "vendors": configured_vendors,
-            "ai": ai_explanation,
-            "metadata": {"request_id": request_id}
+            "verdict": {"label": analysis.get("verdict","SAFE"), "security_rating": analysis.get("score",0), "confidence": analysis.get("confidence","high")},
+            "detections": analysis.get("findings",[]),
+            "virustotal": {
+                "status": "available" if isinstance(threat_intel, dict) and threat_intel.get("status") not in ("unavailable","error","timeout") else "unavailable",
+                "stats": threat_intel.get("stats", {"malicious":0,"suspicious":0,"harmless":0,"undetected":0}) if isinstance(threat_intel, dict) else {"malicious":0,"suspicious":0,"harmless":0,"undetected":0},
+                "vendors": threat_intel.get("vendors", []) if isinstance(threat_intel, dict) else []
+            },
+            "folax_ai": {
+                "status": "available" if isinstance(folax_result, dict) and folax_result.get("status") != "unavailable" else "unavailable",
+                "summary": folax_result.get("summary", "") if isinstance(folax_result, dict) else "",
+                "risk_explanation": folax_result.get("summary", "") if isinstance(folax_result, dict) else "",
+                "key_findings": folax_result.get("key_findings", []) if isinstance(folax_result, dict) else [],
+                "recommendation": folax_result.get("recommendation", "") if isinstance(folax_result, dict) else "",
+                "confidence": folax_result.get("confidence", "") if isinstance(folax_result, dict) else ""
+            },
+            "groq": {
+                "status": "available" if isinstance(groq_result, dict) and groq_result.get("status") != "unavailable" else "unavailable",
+                "summary": groq_result.get("summary", "") if isinstance(groq_result, dict) else "",
+                "explanation": groq_result.get("explanation", "") if isinstance(groq_result, dict) else "",
+                "recommendation": groq_result.get("recommendation", "") if isinstance(groq_result, dict) else "",
+                "confidence": groq_result.get("confidence", "") if isinstance(groq_result, dict) else ""
+            },
+            "technical": {
+                "http": None,
+                "html": None,
+                "trackers": [],
+                "network_requests": [],
+                "external_links": [],
+                "cookies": [],
+                "favicon": None
+            },
+            "metadata": {"analysis_mode":"offline+threat-intelligence","started_at":"","completed_at":"","duration_ms":0,"request_id":request_id}
         }
 
-    except Exception:
+    except Exception as exc:
         logger.exception("Analysis error req=%s", request_id)
-        raise HTTPException(status_code=500, detail="Internal analysis error")
+        # Never return HTML error for API; always JSON with local analysis preserved if possible
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": False,
+                "error": {"code":"BACKEND_ERROR","message":"Internal error during analysis."},
+                "analysis":{"verdict":"UNKNOWN","score":0,"findings":[]},
+                "verdict":{"label":"UNKNOWN","security_rating":0,"confidence":"low"},
+                "detections":[],
+                "virustotal":{"status":"unavailable","stats":{"malicious":0,"suspicious":0,"harmless":0,"undetected":0},"vendors":[]},
+                "folax_ai":{"status":"unavailable","summary":"","key_findings":[],"recommendation":"","confidence":""},
+                "groq":{"status":"unavailable","summary":"","explanation":"","recommendation":"","confidence":""},
+                "technical":{"http":None,"html":None,"trackers":[],"network_requests":[],"external_links":[],"cookies":[],"favicon":None},
+                "metadata":{"analysis_mode":"offline+threat-intelligence","started_at":"","completed_at":"","duration_ms":0,"request_id":request_id},
+            }
+        )
 
 
 @app.post("/api/recon")

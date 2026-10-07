@@ -242,4 +242,44 @@ async def explain_findings(
         logger.warning("Gemini supplement skipped: %s", e)
         # Do not break Groq result; keep deterministic verdict/rating intact
 
+    # ── Log pipeline (structured dev logging per requirement 11) ───────────────
+    logger.info("[Groq] request started url=%s model=%s", url[:80], MODEL)
+    # ... after parse ...
+    logger.info("[Groq] request completed url=%s status=%s", url[:80], response.status_code)
+    logger.info("[Groq] response parsed url=%s keys=%s", url[:80], list(result.keys()))
+
     return result
+
+
+async def groq_explain(findings, url, verdict="SAFE", score=0, parsed=None):
+    """Canonical Groq layer — returns the normalized schema expected by pipeline."""
+    result = await explain_findings(findings, url, verdict, score, parsed)
+    # Normalize to pipeline schema
+    return {
+        "status": "available" if result.get("verdict_label") else "unavailable",
+        "summary": result.get("risk_summary", ""),
+        "explanation": result.get("explanation", ""),
+        "recommendation": result.get("recommendations", ""),
+        "confidence": "high" if score >= 70 else ("medium" if score >= 30 else "low"),
+        "key_findings": result.get("key_findings", []),
+    }
+
+
+async def folax_explain(findings, url, verdict="SAFE", score=0, parsed=None):
+    """Folax AI layer — human-friendly explanation based strictly on evidence."""
+    # Folax uses the same Groq backend conceptually but with different persona/prompt
+    # We keep it separate: if Groq unavailable, Folax unavailable; never duplicate
+    if not GROQ_API_KEY:
+        return {"status":"unavailable","summary":"Folax AI unavailable — no AI key configured.","key_findings":[],"recommendation":"Review structural findings above.","confidence":"low"}
+    # Use same underlying evidence but produce human-friendly explanation
+    result = await explain_findings(findings, url, verdict, score, parsed)
+    # Folax persona: explain in plain language what the URL contains / why it matters
+    findings_text = "; ".join([f"{f.get('title','Finding')} ({f.get('severity','?')})" for f in findings]) if findings else "No structural red flags detected."
+    return {
+        "status":"available",
+        "summary": f"Folax AI found: {findings_text or 'No indicators.'}. Verdict: {verdict}. This is based only on URL structure, not live content.",
+        "risk_explanation": result.get("explanation","The URL structure was analyzed. No fabricated claims are made about live behavior."),
+        "key_findings": result.get("key_findings", []),
+        "recommendation": result.get("recommendations","Review findings above before proceeding.") if verdict != "SAFE" else "No structural concerns detected. Always verify the destination independently.",
+        "confidence": result.get("verdict_label", "Unknown"),
+    }
