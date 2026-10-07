@@ -159,6 +159,25 @@ function renderWatchlist() {
   `).join('');
 }
 
+function runBulk() {
+  const ta = document.getElementById('bulk-urls');
+  const tbody = document.querySelector('#bulk-results tbody');
+  if (!ta || !tbody) return;
+  const urls = ta.value.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 50);
+  tbody.innerHTML = urls.map(u => `<tr><td>${u}</td><td>REVIEW</td><td>55</td><td>MANUAL</td></tr>`).join('');
+}
+function exportCSV() {
+  const rows = [['url','verdict','vt_score','recommended_action']];
+  document.querySelectorAll('#bulk-results tbody tr').forEach(r => {
+    const cells = r.querySelectorAll('td');
+    if (cells.length >= 4) rows.push([cells[0].innerText, cells[1].innerText, cells[2].innerText, cells[3].innerText]);
+  });
+  const csv = rows.map(r => r.map(c => '"'+c.replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); a.download = 'cybersafe_bulk.csv'; a.click();
+}
+function exportSTIX() {
+  alert('STIX export simulated. In production, this would generate a STIX 2.1 bundle from /api/soc/triage results.');
+}
 function generateTriage(index) {
   const mockReports = [
     'Executive Summary: High-confidence phishing (91%). Attack vector: credential harvest via fake login. Infrastructure: bulletproof hosting, ASN 396982. Risk: 94/100.',

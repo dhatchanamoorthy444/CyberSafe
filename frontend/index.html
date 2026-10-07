@@ -79,6 +79,10 @@
         <i data-lucide="git-compare"></i>
         <span>COMPARE</span>
       </button>
+      <button class="nav-tab" data-tab="campaign">
+        <i data-lucide="layers"></i>
+        <span>CAMPAIGN</span>
+      </button>
       <button class="nav-tab" data-tab="soc">
         <i data-lucide="clipboard-list"></i>
         <span>SOC</span>
@@ -493,6 +497,35 @@
             <!-- Populated by app.js -->
           </tbody>
         </table>
+      </div>
+    </section>
+
+    <!-- CAMPAIGN Tab -->
+    <section class="tab-panel" id="campaign-tab">
+      <div class="glass-card">
+        <div class="card-header"><h2><i data-lucide="layers"></i> Campaign Tracker</h2></div>
+        <div class="analysis-grid">
+          <div class="glass-card" style="padding:1rem;">
+            <h3>Campaign PHISH-2024-001</h3>
+            <p><strong>Actor:</strong> FIN7-like (simulated)</p>
+            <ul style="font-size:0.85rem; color:#94a3b8; padding-left:1rem;">
+              <li>paypa1-security.com</li>
+              <li>api.paypa1-security.com</li>
+              <li>secure-bank.example</li>
+            </ul>
+            <p style="margin-top:0.5rem;"><strong>IOCs:</strong> 192.0.2.1 | evil.com</p>
+          </div>
+        </div>
+        <div style="margin-top:1rem;">
+          <h4>Timeline</h4>
+          <table class="watchlist-table" style="width:100%; border-collapse:collapse; color:#e2e8f0;">
+            <thead><tr><th>Date</th><th>Event</th></tr></thead>
+            <tbody>
+              <tr><td>2024-09-01</td><td>First domain registered</td></tr>
+              <tr><td>2024-09-05</td><td>Second URL observed</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 

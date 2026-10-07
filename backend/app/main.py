@@ -290,6 +290,17 @@ class BulkTriageRequest(BaseModel):
     urls: list = Field(..., min_length=1, max_length=50)
 
 
+class ClusterRequest(BaseModel):
+    urls: list = Field(..., min_length=2, max_length=50)
+
+
+@app.post("/api/intel/cluster")
+@limiter.limit("10/minute")
+async def intel_cluster(request: Request, body: ClusterRequest):
+    campaigns = [{"id":"PHISH-2024-001","urls":body.urls[:3],"iocs":{"domains":["evil.com"],"ips":["192.0.2.1"]},"actor_hypothesis":"Simulated FIN7-like campaign — wildcard cert, payroll lure.","timeline":[{"date":"2024-09-01","event":"First domain registered"},{"date":"2024-09-05","event":"Second URL observed"}]}]
+    return {"success":True,"campaigns":campaigns,"count":len(campaigns)}
+
+
 @app.post("/api/soc/triage")
 @limiter.limit("10/minute")
 async def soc_triage(request: Request, body: BulkTriageRequest):
