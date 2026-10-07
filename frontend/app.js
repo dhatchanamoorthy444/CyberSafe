@@ -567,51 +567,11 @@ function renderRiskReportCard(analysis) {
         ${getRiskSummaryText(verdict, findings, score)}
       </div>
 
-      <!-- Evidence Breakdown -->
-      ${findings.length > 0 ? `
-      <div class="risk-breakdown-section">
-        <button class="risk-breakdown-toggle" aria-expanded="false" onclick="toggleRiskBreakdown(this)">
-          <i data-lucide="chevron-down"></i>
-          <span>Why this score? (${findings.length} indicator${findings.length !== 1 ? 's' : ''})</span>
-        </button>
-        <div class="risk-breakdown-content hidden">
-          <div class="risk-contributions">
-            ${findings.map(f => `
-              <div class="risk-contrib-row">
-                <div class="risk-contrib-main">
-                  <span class="risk-contrib-name">${escapeHTML(f.title || f.rule_id)}</span>
-                  <span class="severity-badge ${escapeHTML(f.severity)}">${escapeHTML(f.severity)}</span>
-                </div>
-                <span class="risk-contrib-pts font-mono">+${f.score}</span>
-              </div>
-              <div class="risk-contrib-message">${escapeHTML(f.message)}</div>
-            `).join('')}
-          </div>
-        </div>
-      </div>` : `
+      ${findings.length > 0 ? `<div style="padding:0.5rem 0;font-size:0.85rem;color:var(--text-dim);">${findings.length} indicator${findings.length !== 1 ? 's' : ''} detected · ${getRiskLevelLabel(score)}</div>` : `
       <div class="risk-no-findings">
-        <i data-lucide="check-circle-2" style="color:var(--safe-text)"></i>
+        <i data-lucide="check-circle-2" style="width:2rem;height:2rem;color:var(--safe-text);margin-bottom:0.5rem"></i>
         <span>No structural risk indicators detected in this URL.</span>
       </div>`}
-
-      <!-- Data Sources Status -->
-      <div class="risk-sources">
-        <span class="source-badge source--offline ${hasVT ? '' : 'source--unavailable'}">
-          <i data-lucide="activity"></i> Offline Analysis
-        </span>
-        <span class="source-badge source--vt ${hasVT ? (vtResult.status === 'malicious' || vtResult.status === 'suspicious' ? 'source--danger' : 'source--safe') : 'source--unavailable'}">
-          <i data-lucide="shield"></i> VirusTotal ${hasVT ? vtResult.status : 'Unavailable'}
-        </span>
-        <span class="source-badge source--ai ${hasAI ? 'source--info' : 'source--unavailable'}">
-          <i data-lucide="bot"></i> AI Analysis ${hasAI ? 'Ready' : 'Unavailable'}
-        </span>
-      </div>
-
-      <!-- Limitations Note -->
-      <div class="risk-limitations">
-        <i data-lucide="info"></i>
-        <span>This analysis checks URL <strong>structure only</strong>. Destination content and live behavior were not evaluated.</span>
-      </div>
     </div>
   `;
 
