@@ -260,6 +260,10 @@ async function handleAnalyze(url) {
       mode: 'offline',
     });
 
+    // Store vendor and AI data for the risk report card before rendering
+    window._lastVendorData = data.vendors || {};
+    window._lastAIAnalysis = data.ai || {};
+
     renderAnalysisResults(data.analysis);
     if (data.ai) renderAIExplanation(data.ai);
     showResults();
@@ -273,18 +277,69 @@ function renderAIExplanation(ai) {
   if (!panel) return;
   panel.classList.remove('hidden');
 
-  const content = document.getElementById('ai-explanation-content');
-  if (!content) return;
-
-  let html = `
-    <p><strong>Analysis Summary:</strong> ${escapeHTML(ai.explanation || 'No analysis available')}</p>
-  `;
-
-  if (ai.risk_summary && ai.risk_summary !== 'N/A' && ai.risk_summary !== 'Analysis failed.') {
-    html += `<p style="margin-top:0.5rem"><strong>Risk Assessment:</strong> ${escapeHTML(ai.risk_summary)}</p>`;
+  // Update the overview section (already has static content, but we can enhance it)
+  const overviewSection = panel.querySelector('.analysis-section h4');
+  if (overviewSection && overviewSection.textContent === 'Overview') {
+    const overviewP = overviewSection.nextElementSibling;
+    if (overviewP && ai.explanation) {
+      overviewP.textContent = ai.explanation;
+    }
   }
 
-  content.innerHTML = html;
+  // Populate Key Findings list
+  const findingsList = document.getElementById('ai-findings-list');
+  if (findingsList && ai.key_findings && Array.isArray(ai.key_findings)) {
+    if (ai.key_findings.length === 0) {
+      findingsList.innerHTML = '<li>No structural risk indicators detected in URL analysis.</li>';
+    } else {
+      findingsList.innerHTML = ai.key_findings.map(finding =>
+        `<li>${escapeHTML(finding)}</li>`
+      ).join('');
+    }
+  }
+
+  // Populate Risk Indicators
+  const riskIndicators = document.getElementById('ai-risk-indicators');
+  if (riskIndicators && ai.risk_indicators) {
+    if (Array.isArray(ai.risk_indicators) && ai.risk_indicators.length > 0) {
+      riskIndicators.innerHTML = ai.risk_indicators.map(indicator =>
+        `<p>${escapeHTML(indicator)}</p>`
+      ).join('');
+    } else if (typeof ai.risk_indicators === 'string') {
+      riskIndicators.textContent = ai.risk_indicators;
+    } else {
+      riskIndicators.textContent = 'No specific risk indicators identified in the structural analysis.';
+    }
+  }
+
+  // Populate Recommendations
+  const recommendations = document.getElementById('ai-recommendations');
+  if (recommendations && ai.recommendations) {
+    recommendations.textContent = ai.recommendations;
+  }
+
+  // Update Limitations
+  const limitations = document.getElementById('ai-limitations');
+  if (limitations && ai.limitations) {
+    limitations.textContent = ai.limitations;
+  }
+
+  // Update the legacy content div for backward compatibility
+  const content = document.getElementById('ai-explanation-content');
+  if (content) {
+    let html = `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-subtle)">`;
+
+    if (ai.verdict_label) {
+      html += `<p><strong>Risk Level:</strong> ${escapeHTML(ai.verdict_label)}</p>`;
+    }
+
+    if (ai.risk_summary && ai.risk_summary !== 'N/A' && ai.risk_summary !== 'Analysis failed.') {
+      html += `<p><strong>Summary:</strong> ${escapeHTML(ai.risk_summary)}</p>`;
+    }
+
+    html += `</div>`;
+    content.innerHTML = html;
+  }
 }
 
 // ============================================================================
@@ -295,7 +350,8 @@ function renderAnalysisResults(analysis) {
   verdictBanner.className = `verdict-banner ${v}`;
   verdictTitle.textContent = v;
   verdictRecommendation.textContent = analysis.recommendation || '';
-  scoreText.textContent   = `${100 - Math.max(0, Math.min(100, analysis.score || 0))}%`;
+  // Risk score: 0-100 where higher means MORE dangerous (consistent labeling)
+  scoreText.textContent   = `${Math.max(0, Math.min(100, analysis.score || 0))}`;
   confidenceText.textContent = (analysis.confidence || '').toUpperCase();
 
   const iconMap = { SAFE: 'shield-check', REVIEW: 'alert-circle', SUSPICIOUS: 'shield-alert' };
@@ -303,11 +359,12 @@ function renderAnalysisResults(analysis) {
 
   renderAnatomy(analysis);
   renderFindings(analysis.findings || [], analysis.score);
-  renderRiskScoreBar(analysis.score, analysis.findings || []);
+  renderRiskReportCard(analysis);
   renderNetworkTransparency();
   renderTechnicalDetails(analysis);
 
   // Store last analysis for export and IOC
+  // (_lastVendorData and _lastAIAnalysis are set by the caller before renderAnalysisResults)
   window._lastAnalysis = analysis;
 
   // Show export button
@@ -392,35 +449,200 @@ function buildURLVisual(analysis) {
   </div>`;
 }
 
-// Risk score bar — uses ACTUAL finding scores from API
-function renderRiskScoreBar(score, findings) {
+// ============================================================================
+// Risk Report Card — Clear, consistent risk scoring
+// ============================================================================
+
+/**
+ * Maps severity to a visual color class for the risk bar.
+ */
+function getRiskColorClass(score) {
+  if (score >= 75) return 'bar--critical';
+  if (score >= 50) return 'bar--high';
+  if (score >= 25) return 'bar--moderate';
+  return 'bar--low';
+}
+
+/**
+ * Maps score to a human-readable risk level label.
+ */
+function getRiskLevelLabel(score) {
+  if (score >= 75) return 'Critical Risk';
+  if (score >= 50) return 'High Risk';
+  if (score >= 25) return 'Moderate Risk';
+  if (score > 0) return 'Low Risk';
+  return 'No Risk Detected';
+}
+
+/**
+ * Returns an emoji icon appropriate for the risk level.
+ */
+function getRiskEmoji(score) {
+  if (score >= 75) return '🚨';
+  if (score >= 50) return '⚠️';
+  if (score >= 25) return '⚡';
+  if (score > 0) return 'ℹ️';
+  return '✅';
+}
+
+/**
+ * Main render function for the Risk Report Card.
+ * Displays a single, consistent risk score (0-100) where higher = more dangerous.
+ */
+function renderRiskReportCard(analysis) {
   const container = document.getElementById('risk-score-breakdown');
   if (!container) return;
 
-  const securityRating = Math.max(0, Math.min(100, 100 - (typeof score === 'number' ? score : 0)));
-  const pct = securityRating;
-  const colorClass = score >= 50 ? 'bar--suspicious' : score >= 20 ? 'bar--review' : 'bar--safe';
+  const score = Math.max(0, Math.min(100, analysis.score || 0));
+  const findings = analysis.findings || [];
+  const verdict = analysis.verdict || 'UNKNOWN';
+  const parsed = analysis.parsed || {};
+
+  const colorClass = getRiskColorClass(score);
+  const riskLabel = getRiskLevelLabel(score);
+  const riskEmoji = getRiskEmoji(score);
+
+  // Determine if VirusTotal data is available
+  const vendorData = window._lastVendorData || {};
+  const vtResult = vendorData.results?.find(r => r.vendor === 'VirusTotal');
+  const hasVT = vtResult && vtResult.status !== 'not_checked' && vtResult.status !== 'error';
+
+  // Determine if AI analysis is available
+  const aiData = window._lastAIAnalysis || {};
+  const hasAI = aiData && aiData.explanation && !aiData.explanation.includes('unavailable');
 
   container.innerHTML = `
-    <div class="risk-score-header">
-      <span class="risk-score-label">Security Rating</span>
-      <span class="risk-score-value font-mono">${pct}%</span>
+    <div class="risk-report-card" role="region" aria-label="Risk Report">
+      <!-- Verdict Header -->
+      <div class="risk-report-header">
+        <div class="risk-report-verdict">
+          <span class="risk-emoji" aria-hidden="true">${riskEmoji}</span>
+          <span class="risk-level-label">${riskLabel}</span>
+        </div>
+        <div class="risk-score-display">
+          <span class="risk-number font-mono">${score}</span>
+          <span class="risk-max">/100</span>
+        </div>
+      </div>
+
+      <!-- Visual Risk Scale -->
+      <div class="risk-scale-container" role="img" aria-label="Risk scale showing ${score} out of 100">
+        <div class="risk-scale-labels">
+          <span class="scale-label">Low</span>
+          <span class="scale-label">Moderate</span>
+          <span class="scale-label">High</span>
+          <span class="scale-label">Critical</span>
+        </div>
+        <div class="risk-bar-track">
+          <div class="risk-bar-fill ${colorClass}" style="width:${score}%"></div>
+          <div class="risk-marker" style="left:${score}%"></div>
+        </div>
+      </div>
+
+      <!-- Summary Explanation -->
+      <div class="risk-summary">
+        ${getRiskSummaryText(verdict, findings, score)}
+      </div>
+
+      <!-- Evidence Breakdown -->
+      ${findings.length > 0 ? `
+      <div class="risk-breakdown-section">
+        <button class="risk-breakdown-toggle" aria-expanded="false" onclick="toggleRiskBreakdown(this)">
+          <i data-lucide="chevron-down"></i>
+          <span>Why this score? (${findings.length} indicator${findings.length !== 1 ? 's' : ''})</span>
+        </button>
+        <div class="risk-breakdown-content hidden">
+          <div class="risk-contributions">
+            ${findings.map(f => `
+              <div class="risk-contrib-row">
+                <div class="risk-contrib-main">
+                  <span class="risk-contrib-name">${escapeHTML(f.title || f.rule_id)}</span>
+                  <span class="severity-badge ${escapeHTML(f.severity)}">${escapeHTML(f.severity)}</span>
+                </div>
+                <span class="risk-contrib-pts font-mono">+${f.score}</span>
+              </div>
+              <div class="risk-contrib-message">${escapeHTML(f.message)}</div>
+            `).join('')}
+          </div>
+        </div>
+      </div>` : `
+      <div class="risk-no-findings">
+        <i data-lucide="check-circle-2" style="color:var(--safe-text)"></i>
+        <span>No structural risk indicators detected in this URL.</span>
+      </div>`}
+
+      <!-- Data Sources Status -->
+      <div class="risk-sources">
+        <span class="source-badge source--offline ${hasVT ? '' : 'source--unavailable'}">
+          <i data-lucide="activity"></i> Offline Analysis
+        </span>
+        <span class="source-badge source--vt ${hasVT ? (vtResult.status === 'malicious' || vtResult.status === 'suspicious' ? 'source--danger' : 'source--safe') : 'source--unavailable'}">
+          <i data-lucide="shield"></i> VirusTotal ${hasVT ? vtResult.status : 'Unavailable'}
+        </span>
+        <span class="source-badge source--ai ${hasAI ? 'source--info' : 'source--unavailable'}">
+          <i data-lucide="bot"></i> AI Analysis ${hasAI ? 'Ready' : 'Unavailable'}
+        </span>
+      </div>
+
+      <!-- Limitations Note -->
+      <div class="risk-limitations">
+        <i data-lucide="info"></i>
+        <span>This analysis checks URL <strong>structure only</strong>. Destination content and live behavior were not evaluated.</span>
+      </div>
     </div>
-    <div class="risk-bar-track">
-      <div class="risk-bar-fill ${colorClass}" style="width:${pct}%"></div>
-    </div>
-    <p style="font-size:0.8rem;color:var(--text-dim);margin-top:0.25rem;">Security Rating represents the percentage of the rating scale remaining after detected risk indicators. It is not a guarantee that a URL is safe.</p>
-    ${findings.length ? `
-    <div class="risk-contributions">
-      <div class="risk-contrib-title">Score breakdown:</div>
-      ${findings.map(f => `
-        <div class="risk-contrib-row">
-          <span class="risk-contrib-name">${escapeHTML(f.title || f.rule_id)}</span>
-          <span class="risk-contrib-badge severity-badge ${escapeHTML(f.severity)}">${escapeHTML(f.severity)}</span>
-          <span class="risk-contrib-pts font-mono">+${f.score}</span>
-        </div>`).join('')}
-    </div>` : ''}`;
+  `;
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
+
+/**
+ * Returns summary text based on verdict and findings.
+ */
+function getRiskSummaryText(verdict, findings, score) {
+  if (findings.length === 0) {
+    return `<p>No structural risk indicators were detected in this URL. The URL appears structurally clean based on offline analysis.</p>`;
+  }
+
+  const highSeverityCount = findings.filter(f => f.severity === 'high' || f.severity === 'critical').length;
+  const mediumSeverityCount = findings.filter(f => f.severity === 'medium').length;
+
+  if (score >= 50) {
+    return `<p><strong>Multiple risk indicators detected.</strong> ${highSeverityCount} high-severity finding${highSeverityCount !== 1 ? 's' : ''} contribute to this elevated risk score. Exercise extreme caution before proceeding.</p>`;
+  } else if (score >= 25) {
+    return `<p><strong>Some concerns identified.</strong> ${mediumSeverityCount} medium-severity indicator${mediumSeverityCount !== 1 ? 's' : ''} were found. Review the breakdown below before visiting this URL.</p>`;
+  } else {
+    return `<p><strong>Minor structural issues detected.</strong> ${findings.length} low-severity indicator${findings.length !== 1 ? 's' : ''} were found. These are typically configuration concerns rather than security threats.</p>`;
+  }
+}
+
+/**
+ * Toggle the risk breakdown section.
+ */
+function toggleRiskBreakdown(btn) {
+  const content = btn.nextElementSibling;
+  const isExpanded = !content.classList.contains('hidden');
+  content.classList.toggle('hidden');
+  btn.setAttribute('aria-expanded', !isExpanded);
+  const icon = btn.querySelector('[data-lucide]');
+  if (icon) {
+    icon.setAttribute('data-lucide', isExpanded ? 'chevron-down' : 'chevron-up');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+}
+
+// Toggle finding expand - made available globally
+window.toggleFindingExpand = function(btn, expandId) {
+  const content = document.getElementById(expandId);
+  if (!content) return;
+  const isExpanded = !content.classList.contains('hidden');
+  content.classList.toggle('hidden');
+  btn.setAttribute('aria-expanded', !isExpanded);
+  const icon = btn.querySelector('[data-lucide]');
+  if (icon) {
+    icon.setAttribute('data-lucide', isExpanded ? 'chevron-down' : 'chevron-up');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+};
 
 // Explainable findings with WHAT/WHY/ACTION
 const FINDING_EXPLANATIONS = {
@@ -730,7 +952,7 @@ function exportReport() {
     `  Generated : ${new Date().toISOString()}`,
     `  URL       : ${p.original_url || ''}`,
     `  Verdict   : ${a.verdict}`,
-    `  Security Rating: ${Math.max(0, Math.min(100, 100 - (a.score || 0)))}%`,
+    `  Risk Score: ${Math.max(0, Math.min(100, a.score || 0))}/100 (0=No risk, 100=Critical risk)`,
     `  Confidence: ${(a.confidence || '').toUpperCase()}`,
     '───────────────────────────────────────────',
     '  RECOMMENDATION',

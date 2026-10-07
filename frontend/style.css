@@ -1101,98 +1101,260 @@ body {
   font-family: var(--font-mono);
 }
 
-/* Phase 5: Risk Score Breakdown */
-.risk-score-card {
+/* Phase 5: Risk Report Card (Updated Risk Score Display) */
+.risk-report-card {
   margin-bottom: 1.5rem;
 }
 
-.risk-score-header {
+.risk-report-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.risk-report-verdict {
+  display: flex;
   align-items: center;
-  margin-bottom: 0.75rem;
+  gap: 0.5rem;
 }
 
-.risk-score-label {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  font-weight: 600;
+.risk-emoji {
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
-.risk-score-value {
+.risk-level-label {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-main);
 }
 
+.risk-score-display {
+  text-align: right;
+}
+
+.risk-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.risk-max {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Visual Risk Scale */
+.risk-scale-container {
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+.risk-scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
 .risk-bar-track {
   width: 100%;
-  height: 8px;
+  height: 10px;
   background: var(--bg-surface-elevated);
-  border-radius: 4px;
+  border-radius: 5px;
   overflow: hidden;
   margin-bottom: 1rem;
+  position: relative;
 }
 
 .risk-bar-fill {
   height: 100%;
-  border-radius: 4px;
+  border-radius: 5px;
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.risk-bar-fill.bar--safe {
-  background: linear-gradient(90deg, var(--safe-border), var(--safe-text));
-  box-shadow: 0 0 8px var(--glow-safe);
+.risk-bar-fill.bar--critical {
+  background: linear-gradient(90deg, #dc2626, #ef4444);
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.6);
 }
 
-.risk-bar-fill.bar--review {
-  background: linear-gradient(90deg, var(--review-border), var(--review-text));
-  box-shadow: 0 0 8px var(--glow-review);
+.risk-bar-fill.bar--high {
+  background: linear-gradient(90deg, #ea580c, #f97316);
+  box-shadow: 0 0 12px rgba(234, 88, 12, 0.6);
 }
 
-.risk-bar-fill.bar--suspicious {
-  background: linear-gradient(90deg, var(--suspicious-border), var(--suspicious-text));
-  box-shadow: 0 0 8px var(--glow-suspicious);
+.risk-bar-fill.bar--moderate {
+  background: linear-gradient(90deg, #d97706, #fbbf24);
+  box-shadow: 0 0 12px rgba(217, 119, 6, 0.6);
+}
+
+.risk-bar-fill.bar--low {
+  background: linear-gradient(90deg, #16a34a, #4ade80);
+  box-shadow: 0 0 12px rgba(22, 163, 74, 0.6);
+}
+
+.risk-marker {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 18px;
+  background: var(--text-main);
+  transform: translateX(-50%);
+}
+
+/* Summary Section */
+.risk-summary {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: rgba(51, 65, 85, 0.3);
+  border-left: 4px solid var(--accent-primary);
+  border-radius: 0 4px 4px 0;
+}
+
+.risk-summary p {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--text-main);
+}
+
+/* Breakdown Section */
+.risk-breakdown-section {
+  margin: 1.5rem 0;
+}
+
+.risk-breakdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  cursor: pointer;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.risk-breakdown-toggle:hover {
+  color: var(--accent-hover);
+}
+
+.risk-breakdown-content {
+  margin-top: 1rem;
 }
 
 .risk-contributions {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-}
-
-.risk-contrib-title {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.25rem;
+  gap: 0.75rem;
 }
 
 .risk-contrib-row {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: rgba(51, 65, 85, 0.3);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.risk-contrib-main {
+  display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.375rem 0;
-  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
-}
-
-.risk-contrib-row:last-child {
-  border-bottom: none;
-}
-
-.risk-contrib-name {
   flex: 1;
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  min-width: 0;
 }
 
-.risk-contrib-pts {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--text-main);
-  white-space: nowrap;
+.risk-contrib-message {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-left: 2.5rem;
+  margin-top: 0.25rem;
+}
+
+.risk-no-findings {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  border-radius: 6px;
+  color: var(--safe-text);
+  margin: 1rem 0;
+}
+
+/* Data Sources Status */
+.risk-sources {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 1.5rem 0;
+}
+
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.source--offline {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+}
+
+.source--vt {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: #a5b4fc;
+}
+
+.source--vt.source--safe {
+  background: rgba(22, 163, 74, 0.1);
+  border-color: rgba(22, 163, 74, 0.4);
+  color: #4ade80;
+}
+
+.source--vt.source--danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.source--unavailable {
+  background: rgba(107, 114, 128, 0.1);
+  border-color: rgba(107, 114, 128, 0.3);
+  color: #9ca3af;
+}
+
+.source--ai {
+  background: rgba(236, 72, 153, 0.1);
+  border-color: rgba(236, 72, 153, 0.3);
+  color: #f472b6;
+}
+
+/* Limitations Note */
+.risk-limitations {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+  padding: 0.75rem;
+  background: rgba(245, 158, 11, 0.1);
+  border-left: 4px solid var(--review-border);
+  border-radius: 0 4px 4px 0;
+  color: var(--review-text);
+  font-size: 0.85rem;
 }
 
 /* Analysis Grid */

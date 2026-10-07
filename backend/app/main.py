@@ -194,7 +194,13 @@ async def analyze_endpoint(
         findings = analysis.get("findings", [])
         tasks = [
             check_virustotal(url),
-            explain_findings(findings, url)
+            explain_findings(
+                findings,
+                url,
+                verdict=analysis.get("verdict", "SAFE"),
+                score=analysis.get("score", 0),
+                parsed=analysis.get("parsed") or {},
+            )
         ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
