@@ -6,6 +6,9 @@ from typing import Dict, Any, List
 
 logger = logging.getLogger("cybersafe.security_ai")
 
+# Gemini integration — isolated service, key never exposed to frontend
+from backend.app.services import gemini_service
+
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 TIMEOUT = float(os.environ.get("GROQ_TIMEOUT_MS", 15000)) / 1000.0
 MODEL = "llama3-8b-8192"
@@ -219,5 +222,24 @@ async def explain_findings(
 
     # Keep legacy fields so existing callers that check only these two still work
     result.setdefault("explanation_legacy", result["explanation"])
+
+    # ── Gemini supplement (no key exposure; isolated service) ───────────────
+    # Call gemini_service.explain to get provider/model/label; never embed key
+    try:
+        gemini_result = gemini_service.explain({
+            "verdict": verdict,
+            "findings": findings,
+            "url": url,
+            "score": score,
+        })
+        # Preserve structured AI fields; add Gemini metadata only when available
+        if gemini_result.get("provider") == "gemini" and gemini_result.get("explanation"):
+            result["gemini_explanation"] = gemini_result["explanation"]
+            result["gemini_provider"] = gemini_result.get("provider")
+            result["gemini_model"] = gemini_result.get("model")
+            result["gemini_label"] = gemini_result.get("label")
+    except Exception as e:
+        logger.warning("Gemini supplement skipped: %s", e)
+        # Do not break Groq result; keep deterministic verdict/rating intact
 
     return result
