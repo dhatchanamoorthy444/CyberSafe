@@ -18,36 +18,36 @@ const API = {
 // ============================================================================
 // DOM References
 // ============================================================================
-const form           = document.getElementById('analyze-form');
-const urlInput       = document.getElementById('url-input');
-const analyzeBtn     = document.getElementById('analyze-btn');
-const qrToggleBtn    = document.getElementById('qr-toggle-btn');
+const form = document.getElementById('analyze-form');
+const urlInput = document.getElementById('url-input');
+const analyzeBtn = document.getElementById('analyze-btn');
+const qrToggleBtn = document.getElementById('qr-toggle-btn');
 const qrReaderContainer = document.getElementById('qr-reader-container');
-const qrCloseBtn     = document.getElementById('qr-close-btn');
+const qrCloseBtn = document.getElementById('qr-close-btn');
 
-const loadingState   = document.getElementById('loading-state');
-const loadingText    = document.getElementById('loading-text');
-const errorState     = document.getElementById('error-state');
-const errorTitle     = document.getElementById('error-title');
-const errorMessage   = document.getElementById('error-message');
+const loadingState = document.getElementById('loading-state');
+const loadingText = document.getElementById('loading-text');
+const errorState = document.getElementById('error-state');
+const errorTitle = document.getElementById('error-title');
+const errorMessage = document.getElementById('error-message');
 const resultsContainer = document.getElementById('results-container');
 
 // Offline analysis elements
 const offlineResults = document.getElementById('offline-results');
-const verdictBanner  = document.getElementById('verdict-banner');
-const verdictIcon    = document.getElementById('verdict-icon');
-const verdictTitle   = document.getElementById('verdict-title');
+const verdictBanner = document.getElementById('verdict-banner');
+const verdictIcon = document.getElementById('verdict-icon');
+const verdictTitle = document.getElementById('verdict-title');
 const verdictRecommendation = document.getElementById('verdict-recommendation');
-const scoreText      = document.getElementById('score-text');
+const scoreText = document.getElementById('score-text');
 const confidenceText = document.getElementById('confidence-text');
-const anatomyGrid    = document.getElementById('anatomy-grid');
-const findingsList   = document.getElementById('findings-list');
-const findingsCount  = document.getElementById('findings-count');
-const anatomyVisual  = document.getElementById('anatomy-visual');
+const anatomyGrid = document.getElementById('anatomy-grid');
+const findingsList = document.getElementById('findings-list');
+const findingsCount = document.getElementById('findings-count');
+const anatomyVisual = document.getElementById('anatomy-visual');
 
 // History
-const historyList    = document.getElementById('history-list');
-const emptyHistory   = document.getElementById('empty-history');
+const historyList = document.getElementById('history-list');
+const emptyHistory = document.getElementById('empty-history');
 const clearHistoryBtn = document.getElementById('clear-history-btn');
 
 // ============================================================================
@@ -163,6 +163,33 @@ function switchToTab(tabId) {
 }
 
 // ============================================================================
+// Simplified Analysis Render
+// ============================================================================
+function renderSimplifiedAnalysis(analysis) {
+  const v = analysis.verdict;
+  verdictBanner.className = `verdict-banner ${v}`;
+  verdictTitle.textContent = v;
+  verdictRecommendation.textContent = analysis.recommendation || '';
+  // Risk score: 0-100 where higher means MORE dangerous (consistent labeling)
+  scoreText.textContent = `${Math.max(0, Math.min(100, analysis.score || 0))}`;
+  confidenceText.textContent = (analysis.confidence || '').toUpperCase();
+
+  const iconMap = { SAFE: 'shield-check', REVIEW: 'alert-circle', SUSPICIOUS: 'shield-alert' };
+  verdictIcon.innerHTML = `<i data-lucide="${iconMap[v] || 'shield'}"></i>`;
+
+  renderAnatomy(analysis);
+  renderFindings(analysis.findings || [], analysis.score);
+  renderRiskReportCard(analysis);
+  renderNetworkTransparency();
+  renderTechnicalDetails(analysis);
+
+  // Store last analysis for export and IOC
+  window._lastAnalysis = analysis;
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// ============================================================================
 // Form Submission
 // ============================================================================
 async function handleFormSubmit(e) {
@@ -179,6 +206,33 @@ async function handleFormSubmit(e) {
     showError('Request Failed', getReadableError(err));
     hideLoading();
   }
+}
+
+// ============================================================================
+// Simplified Analysis Render
+// ============================================================================
+function renderSimplifiedAnalysis(analysis) {
+  const v = analysis.verdict;
+  verdictBanner.className = `verdict-banner ${v}`;
+  verdictTitle.textContent = v;
+  verdictRecommendation.textContent = analysis.recommendation || '';
+  // Risk score: 0-100 where higher means MORE dangerous (consistent labeling)
+  scoreText.textContent = `${Math.max(0, Math.min(100, analysis.score || 0))}`;
+  confidenceText.textContent = (analysis.confidence || '').toUpperCase();
+
+  const iconMap = { SAFE: 'shield-check', REVIEW: 'alert-circle', SUSPICIOUS: 'shield-alert' };
+  verdictIcon.innerHTML = `<i data-lucide="${iconMap[v] || 'shield'}"></i>`;
+
+  renderAnatomy(analysis);
+  renderFindings(analysis.findings || [], analysis.score);
+  renderRiskReportCard(analysis);
+  renderNetworkTransparency();
+  renderTechnicalDetails(analysis);
+
+  // Store last analysis for export and IOC
+  window._lastAnalysis = analysis;
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function getReadableError(err) {
@@ -248,6 +302,10 @@ async function handleAnalyze(url) {
     throw new Error(data.error?.message || 'Analysis failed. Please try again.');
   }
 
+  // Store vendor and AI data for the risk report card before rendering
+  window._lastVendorData = data.vendors || {};
+  window._lastAIAnalysis = data.ai || {};
+
   setTimeout(() => {
     hideLoading();
 
@@ -264,7 +322,7 @@ async function handleAnalyze(url) {
     window._lastVendorData = data.vendors || {};
     window._lastAIAnalysis = data.ai || {};
 
-    renderAnalysisResults(data.analysis);
+    renderSimplifiedAnalysis(data.analysis);
     if (data.ai) renderAIExplanation(data.ai);
     showResults();
     renderIOC(data.analysis);
