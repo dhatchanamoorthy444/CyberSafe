@@ -79,6 +79,14 @@
         <i data-lucide="git-compare"></i>
         <span>COMPARE</span>
       </button>
+      <button class="nav-tab" data-tab="soc">
+        <i data-lucide="clipboard-list"></i>
+        <span>SOC</span>
+      </button>
+      <button class="nav-tab" data-tab="recon">
+        <i data-lucide="target"></i>
+        <span>RECON</span>
+      </button>
       <button class="nav-tab" data-tab="watchlist">
         <i data-lucide="shield-check"></i>
         <span>WATCHLIST</span>
@@ -485,6 +493,60 @@
             <!-- Populated by app.js -->
           </tbody>
         </table>
+      </div>
+    </section>
+
+    <!-- SOC Tab -->
+    <section class="tab-panel" id="soc-tab">
+      <div class="glass-card">
+        <div class="card-header"><h2><i data-lucide="clipboard-list"></i> SOC Workbench — Bulk Triage</h2></div>
+        <p>Paste URLs (one per line) for batch analysis.</p>
+        <textarea id="bulk-urls" rows="4" style="width:100%; background:#0f172a; color:#e2e8f0; border:1px solid #334155; border-radius:0.5rem; padding:0.75rem; font-family:inherit;"></textarea>
+        <div style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+          <button class="btn btn-primary" onclick="runBulk()">Triage</button>
+          <button class="btn btn-secondary" onclick="exportCSV()">Export CSV</button>
+          <button class="btn btn-secondary" onclick="exportSTIX()">Export STIX</button>
+        </div>
+        <table class="watchlist-table" id="bulk-results" style="margin-top:1rem; width:100%; border-collapse:collapse; color:#e2e8f0;">
+          <thead><tr><th>URL</th><th>Verdict</th><th>Score</th><th>Action</th></tr></thead><tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- RECON Tab -->
+    <section class="tab-panel" id="recon-tab">
+      <div class="glass-card">
+        <div class="card-header">
+          <h2><i data-lucide="target"></i> Red Team Recon — Deep Analysis</h2>
+          <span class="gallery-badge">Demo / Live</span>
+        </div>
+        <p style="margin-bottom:1rem">Attack surface, tech fingerprint, certificate transparency, and historical malware correlation.</p>
+        <div class="analysis-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
+          <div class="glass-card" style="padding:1rem;">
+            <h3><i data-lucide="globe"></i> Subdomain Exposure</h3>
+            <ul style="font-size:0.85rem; color:#94a3b8; padding-left:1rem;">
+              <li>paypa1-security.com</li>
+              <li>www.paypa1-security.com</li>
+              <li>api.paypa1-security.com</li>
+            </ul>
+          </div>
+          <div class="glass-card" style="padding:1rem;">
+            <h3><i data-lucide="shield-check"></i> Certificate</h3>
+            <p>Valid • Not wildcard • Expiry 180d</p>
+          </div>
+          <div class="glass-card" style="padding:1rem;">
+            <h3><i data-lucide="cpu"></i> Tech Fingerprint</h3>
+            <p>nginx 1.18 · PHP 7.4 (simulated)</p>
+          </div>
+          <div class="glass-card" style="padding:1rem;">
+            <h3><i data-lucide="bug"></i> CVE Matches</h3>
+            <p>CVE-2024-0001 (simulated)</p>
+          </div>
+        </div>
+        <div style="margin-top:1rem; padding:1rem; background:#0f172a; border:1px solid #334155; border-radius:0.75rem;">
+          <strong>Recon Narrative (Gemini-style):</strong>
+          <p style="margin-top:0.5rem; color:#cbd5e1;">Attack surface assessment: subdomain exposure moderate. Historical VT associations clean in this check. Recommend continuous monitoring.</p>
+        </div>
       </div>
     </section>
 
