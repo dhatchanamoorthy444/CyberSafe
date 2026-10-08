@@ -1,7 +1,5 @@
 {
-  "version": 2,
-  "buildCommand": "echo 'Vite SPA static build - no npm build required'",
+  "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
-  "framework": null,
-  "installCommand": "echo 'No install required for static SPA'"
+  "framework": "vite"
 }
