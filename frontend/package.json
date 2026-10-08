@@ -1,13 +1,22 @@
 {
-  "name": "cybersafe-frontend",
+  "name": "frontend",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "react": "^19",
+    "react-dom": "^19",
+    "next": "^15",
+    "tailwindcss": "^3",
+    "lucide-react": "^0.500"
   },
   "devDependencies": {
-    "vite": "^8.3.3"
+    "autoprefixer": "^10",
+    "postcss": "^8"
   }
 }

