@@ -3720,3 +3720,345 @@ body {
     font-size: 0.85rem;
   }
 }
+
+/* ============================================================================
+   Attack Lab Styles
+   ============================================================================ */
+.attack-lab-section {
+  margin-top: 2rem;
+}
+
+.attack-lab-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--suspicious-text);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.attack-lab-desc {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.attack-lab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.attack-lab-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.attack-lab-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.05), transparent);
+  transition: left 0.5s ease;
+}
+
+.attack-lab-btn:hover::before {
+  left: 100%;
+}
+
+.attack-lab-btn:hover {
+  border-color: var(--suspicious-border);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4);
+  transform: translateY(-3px);
+}
+
+.attack-lab-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.attack-lab-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.attack-lab-info strong {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.attack-lab-info span {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+/* ============================================================================
+   Enhanced Glow Effects for Buttons
+   ============================================================================ */
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, #0ea5e9 100%);
+  box-shadow: 0 4px 20px var(--glow-primary), 0 0 0 1px rgba(56, 189, 248, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 8px 30px var(--glow-primary), 0 0 0 2px rgba(56, 189, 248, 0.4);
+  transform: translateY(-3px);
+}
+
+.btn-secondary {
+  background: var(--bg-surface-elevated);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.3), 0 6px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-icon {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-icon:hover {
+  color: var(--text-main);
+  background: var(--bg);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+}
+
+/* Input group alignment */
+.input-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.input-group .url-input {
+  flex: 1;
+  min-width: 280px;
+}
+
+.input-group .btn {
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+/* ============================================================================
+   Attack Lab Button Glow Variants
+   ============================================================================ */
+.attack-lab-btn[data-type="safe"] {
+  border-color: var(--safe-border);
+}
+
+.attack-lab-btn[data-type="safe"]:hover {
+  box-shadow: 0 0 25px var(--glow-safe), 0 8px 32px rgba(0, 0, 0, 0.4);
+  border-color: var(--safe-border);
+}
+
+.attack-lab-btn[data-type="review"] {
+  border-color: var(--review-border);
+}
+
+.attack-lab-btn[data-type="review"]:hover {
+  box-shadow: 0 0 25px var(--glow-review), 0 8px 32px rgba(0, 0, 0, 0.4);
+  border-color: var(--review-border);
+}
+
+.attack-lab-btn[data-type="suspicious"] {
+  border-color: var(--suspicious-border);
+}
+
+.attack-lab-btn[data-type="suspicious"]:hover {
+  box-shadow: 0 0 25px var(--glow-suspicious), 0 8px 32px rgba(0, 0, 0, 0.4);
+  border-color: var(--suspicious-border);
+}
+
+/* ============================================================================
+   Enhanced Verdict Banner Glow
+   ============================================================================ */
+.verdict-banner.SAFE {
+  background: var(--safe-bg);
+  border-color: var(--safe-border);
+  color: var(--safe-text);
+  box-shadow: 0 0 30px var(--glow-safe), inset 0 0 30px rgba(16, 185, 129, 0.05), 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.verdict-banner.REVIEW {
+  background: var(--review-bg);
+  border-color: var(--review-border);
+  color: var(--review-text);
+  box-shadow: 0 0 30px var(--glow-review), inset 0 0 30px rgba(245, 158, 11, 0.05), 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.verdict-banner.SUSPICIOUS {
+  background: var(--suspicious-bg);
+  border-color: var(--suspicious-border);
+  color: var(--suspicious-text);
+  box-shadow: 0 0 30px var(--glow-suspicious), inset 0 0 30px rgba(239, 68, 68, 0.05), 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: pulse-danger 2s infinite;
+}
+
+/* ============================================================================
+   Card Hover Glow Enhancement
+   ============================================================================ */
+.glass-card:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(56, 189, 248, 0.15);
+  transform: translateY(-4px);
+}
+
+/* ============================================================================
+   Input Focus Glow
+   ============================================================================ */
+.url-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2), 0 0 30px rgba(56, 189, 248, 0.15);
+}
+
+/* ============================================================================
+   QR Button Glow
+   ============================================================================ */
+#qr-toggle-btn:hover {
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+}
+
+/* ============================================================================
+   Attack Lab Button Type Glows
+   ============================================================================ */
+.attack-lab-btn[data-type="safe"]:hover {
+  box-shadow: 0 0 30px var(--glow-safe), 0 10px 40px rgba(0, 0, 0, 0.5);
+  border-color: var(--safe-border);
+}
+
+.attack-lab-btn[data-type="review"]:hover {
+  box-shadow: 0 0 30px var(--glow-review), 0 10px 40px rgba(0, 0, 0, 0.5);
+  border-color: var(--review-border);
+}
+
+.attack-lab-btn[data-type="suspicious"]:hover {
+  box-shadow: 0 0 30px var(--glow-suspicious), 0 10px 40px rgba(0, 0, 0, 0.5);
+  border-color: var(--suspicious-border);
+}
+
+/* ============================================================================
+   Global Focus Visible Enhancement
+   ============================================================================ */
+:focus-visible {
+  outline: 3px solid var(--border-focus);
+  outline-offset: 4px;
+  border-radius: 6px;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+}
+
+/* ============================================================================
+   Smooth Transitions for All Interactive Elements
+   ============================================================================ */
+button, .btn, .attack-lab-btn, .demo-btn, .mode-btn, .nav-tab, .filter-btn,
+.recon-tab-btn, .vendor-filters .filter-btn {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================================
+   Reduced Motion Support
+   ============================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================================
+   Print Styles
+   ============================================================================ */
+@media print {
+  .navbar, .btn, .attack-lab-section, .sidebar, footer {
+    display: none !important;
+  }
+  .main-content {
+    display: block !important;
+  }
+  .glass-card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    background: white !important;
+    color: black !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* ============================================================================
+   High Contrast Mode Support
+   ============================================================================ */
+@media (prefers-contrast: high) {
+  :root {
+    --border: #888;
+    --border-focus: #00f;
+    --text-muted: #aaa;
+    --text-dim: #888;
+  }
+  .btn {
+    border: 2px solid currentColor;
+  }
+  .glass-card {
+    border: 2px solid currentColor;
+  }
+}
+
+/* ============================================================================
+   Scrollbar Styling
+   ============================================================================ */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 5px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}
+::-webkit-scrollbar-corner {
+  background: var(--bg);
+}
