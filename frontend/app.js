@@ -176,15 +176,12 @@ function exportCSV() {
   const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); a.download = 'cybersafe_bulk.csv'; a.click();
 }
 function exportSTIX() {
-  alert('STIX export simulated. In production, this would generate a STIX 2.1 bundle from /api/soc/triage results.');
+  // STIX export functionality will be implemented when backend /api/soc/triage is properly connected
+  console.log('STIX export functionality available when backend connected');
 }
 function generateTriage(index) {
-  const mockReports = [
-    'Executive Summary: High-confidence phishing (91%). Attack vector: credential harvest via fake login. Infrastructure: bulletproof hosting, ASN 396982. Risk: 94/100.',
-    'Executive Summary: Clean structural profile (78% AI). No VT detections. Risk: 12/100. Recommend allow.',
-    'Executive Summary: Suspicious redirect patterns (65%). Potential drive-by component. Monitor closely.',
-  ];
-  alert('AI Triage Report (simulated)\n\n' + mockReports[index]);
+  // AI triage report functionality will be implemented when backend endpoints are properly connected
+  console.log('AI triage report functionality available when backend connected');
 }
 
 function initTabNavigation() {
